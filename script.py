@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import requests
 from PIL import Image
@@ -16,6 +17,13 @@ cookies_accept_button_id = 'L2AGLb'
 thumdnail_class_css_selector = 'img.YQ4gaf'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
+
+if getattr(sys, 'frozen', False):
+    script_dir = sys._MEIPASS  # If running as executable
+else:
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # If running as script
+
+geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
 def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
@@ -120,4 +128,5 @@ def search_and_download(search_term, driver_path, number_images=10, target_path=
 keyword_to_search = input("Enter the keyword to search: ")
 number_of_images_to_download = int(input("Enter the number of images to download (default 10): "))
 
-search_and_download(keyword_to_search, 'geckodriver.exe', number_of_images_to_download)
+search_and_download(keyword_to_search, geckodriver_path, number_of_images_to_download)
+input("Press Enter to exit...")
