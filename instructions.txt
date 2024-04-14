@@ -1,0 +1,2 @@
+to create the .exe file including driver:
+pyinstaller --onefile --add-data "geckodriver.exe;." script.py
