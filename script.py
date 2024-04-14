@@ -90,7 +90,7 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
                 break
         else:
             print(f"Found {len(image_urls)} image links, looking for more...")
-            time.sleep(30)
+            time.sleep(5)
         scroll_to_end(wd)
         result_start = len(thumbnail_results)
     print("**************************")
