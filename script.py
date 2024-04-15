@@ -12,8 +12,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
+from wand.image import Image as WandImage
 
 cookies_accept_button_id = 'L2AGLb'
+cookies_accept_button_id_2 = "VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7"
 thumdnail_class_css_selector = 'img.YQ4gaf'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
@@ -40,6 +42,14 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
             EC.presence_of_element_located((By.ID, cookies_accept_button_id))  # Use the id to locate the button
         )
         accept_cookies_button.click()
+    except Exception as e:
+        print(f"Error accepting cookies: {e}")
+
+    try:
+        accept_cookies_button_2 = WebDriverWait(wd, 10).until(
+            EC.presence_of_element_located((By.ID, cookies_accept_button_id_2))
+        )
+        accept_cookies_button_2.click()
     except Exception as e:
         print(f"Error accepting cookies: {e}")
 
@@ -99,19 +109,32 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
 
 
 def persist_image(folder_path, url):
+    print(f"DEBUG - URL: {url}")
     try:
         image_content = requests.get(url, verify=False).content
+
 
     except Exception as e:
         print(f"Error - could not download {url} - {e}")
 
     try:
-        image_file = io.BytesIO(image_content)
-        image = Image.open(image_file).convert('RGB')
+        if url.endswith(".svg"):
+            with WandImage(blob=image_content) as img:
+                png_image = img.make_blob("png")
+                image_file = io.BytesIO(png_image)
+                image = Image.open(image_file).convert('RGB')
+        else:
+            image_file = io.BytesIO(image_content)
+            image = Image.open(image_file).convert('RGB')
+
         file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + ".jpg")
+        print(f"DEBUG - file_path: {file_path}")
         with open(file_path, "wb") as f:
             image.save(f, "JPEG", quality=85)
         print(f"Success - saved {url} - as {file_path}")
+
+        with open(os.path.join(folder_path, "image_info.txt"), "a") as f:
+            f.write(f"{os.path.basename(file_path)}: {url}\n")
     except Exception as e:
         print(f"Error - could not save {url} - {e}")
 
