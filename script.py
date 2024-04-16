@@ -15,10 +15,11 @@ from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 
 cookies_accept_button_id = 'L2AGLb'
-cookies_accept_button_id_2 = "VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7"
+cookies_accept_button_id_2 = "VfPpkd-vQzf8d"
 thumdnail_class_css_selector = 'img.YQ4gaf'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
+close_image_review_button = 'button.uj1Jfd.wv9iH.iM6qI'
 
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
@@ -29,8 +30,12 @@ geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
 def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
-    def scroll_to_end(wd, pixels=500):
-        wd.execute_script(f"window.scrollTo(0, {pixels})")
+    def scroll_to_end(wd):
+        wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(sleep_between_interactions)
+
+    def scroll_to_top(wd):
+        wd.execute_script("window.scrollTo(0, 0);")
         time.sleep(sleep_between_interactions)
 
     search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"
@@ -38,7 +43,7 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
     wd.get(search_url.format(q=query))
 
     try:
-        accept_cookies_button = WebDriverWait(wd, 10).until(
+        accept_cookies_button = WebDriverWait(wd, 1).until(
             EC.presence_of_element_located((By.ID, cookies_accept_button_id))  # Use the id to locate the button
         )
         accept_cookies_button.click()
@@ -46,7 +51,7 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
         print(f"Error accepting cookies: {e}")
 
     try:
-        accept_cookies_button_2 = WebDriverWait(wd, 10).until(
+        accept_cookies_button_2 = WebDriverWait(wd, 1).until(
             EC.presence_of_element_located((By.ID, cookies_accept_button_id_2))
         )
         accept_cookies_button_2.click()
@@ -57,6 +62,11 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
     image_count = 0
     result_start = 0
 
+    scroll_to_end(wd)
+    scroll_to_end(wd)
+    scroll_to_end(wd)
+    scroll_to_top(wd)
+
     while image_count < max_links_to_fetch:
 
         thumbnail_results = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)
@@ -65,43 +75,60 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
         print(f"Found {number_results} search results. Extracting links from {result_start}:{number_results}")
 
         counter = 1
-        for img in thumbnail_results:
+
+        number_results = len(wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector))
+        counteven = 0
+        for index in range(number_results):
+            img = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)[index+result_start]
+
             try:
+                img = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)[index]
+                wd.execute_script("arguments[0].scrollIntoView();", img)
                 ActionChains(wd).move_to_element(img).perform()
-                img.click()
+                original_window = wd.current_window_handle
+                if counteven % 2 == 0:
+                    img.click()
                 time.sleep(sleep_between_interactions)
                 print(f"{counter}. Clicked on {img}")
+                counteven += 1
                 counter += 1
+                wd.switch_to.window(original_window)
             except Exception as e:
                 print(f"{counter}. Error clicking on {img}: {e}")
                 counter += 1
                 continue
 
             try:
-                WebDriverWait(wd, 10).until(
+                actual_image = WebDriverWait(wd, 2).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
-                actual_image = wd.find_element(By.CSS_SELECTOR, full_image_class_css_selector)
-                print(f"{counter}. found {actual_image}")
+
+                img_url = actual_image.get_attribute("src")
+
             except Exception as e:
                 print(f"{counter}. Error finding full image: {e}")
                 continue
 
-            print(f"DEBUG - {counter}. Found image: {actual_image.get_attribute('src')}")
-            if actual_image.get_attribute("src") and "http" in actual_image.get_attribute("src") and actual_image.get_attribute("src") not in image_urls:
-                image_urls.add(actual_image.get_attribute("src"))
-                print(f"{counter}. Successfully added {actual_image.get_attribute('src')} to image_urls")
+
+
+            print(f"{counter}. Found image: {img_url}")
+            image_urls.add(img_url)
+            print(f"{counter}. Successfully added {img_url} to image_urls")
 
             image_count = len(image_urls)
 
+            print("**************************")
+            print(f"Image count: {image_count}, max_links_to_fetch: {max_links_to_fetch}")
+            print("**************************")
             if len(image_urls) >= max_links_to_fetch:
                 print(f"found: {len(image_urls)} image links")
                 print("**************************")
                 print("Breaking FOR loop")
                 break
+
         else:
             print(f"Found {len(image_urls)} image links, looking for more...")
-            time.sleep(5)
-        scroll_to_end(wd)
+
+        # scroll_to_end(wd)
         result_start = len(thumbnail_results)
     print("**************************")
     print("Breaking WHILE loop")
@@ -109,9 +136,9 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
 
 
 def persist_image(folder_path, url):
-    print(f"DEBUG - URL: {url}")
+    print(f"URL: {url}")
     try:
-        image_content = requests.get(url, verify=False).content
+        image_content = requests.get(url).content
 
 
     except Exception as e:
@@ -128,7 +155,6 @@ def persist_image(folder_path, url):
             image = Image.open(image_file).convert('RGB')
 
         file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + ".jpg")
-        print(f"DEBUG - file_path: {file_path}")
         with open(file_path, "wb") as f:
             image.save(f, "JPEG", quality=85)
         print(f"Success - saved {url} - as {file_path}")
