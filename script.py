@@ -29,7 +29,7 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, wd, sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, target_folder, wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -114,8 +114,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 continue
 
             print(f"{counter}. Found image: {img_url}")
-            image_urls.add(img_url)
-            print(f"{counter}. Successfully added {img_url} to image_urls")
+            download = persist_image(target_folder, img_url)
+            if download:
+                image_urls.add(img_url)
+
 
             image_count = len(image_urls)
 
@@ -147,6 +149,9 @@ def persist_image(folder_path, url):
         print(f"Error - could not download {url} - {e}")
 
     try:
+        image_extension = url.rsplit('.', 1)[-1]
+        if not image_extension or len(image_extension) > 4:
+            image_extension = 'jpg'
         if url.endswith(".svg"):
             with WandImage(blob=image_content) as img:
                 png_image = img.make_blob("png")
@@ -156,15 +161,18 @@ def persist_image(folder_path, url):
             image_file = io.BytesIO(image_content)
             image = Image.open(image_file).convert('RGB')
 
-        file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + ".jpg")
+        file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + "." + image_extension)
         with open(file_path, "wb") as f:
-            image.save(f, "JPEG", quality=85)
+            f.write(image_content)
         print(f"Success - saved {url} - as {file_path}")
+
 
         with open(os.path.join(folder_path, "image_info.txt"), "a") as f:
             f.write(f"{os.path.basename(file_path)}: {url}\n")
+        return True
     except Exception as e:
         print(f"Error - could not save {url} - {e}")
+        return False
 
 
 def search_and_download(search_term, driver_path, number_images, result_start, size_filter,  target_path="./images"):
@@ -182,10 +190,10 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     options.headless = True
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        res = fetch_image_urls(search_term, number_images, result_start, size_filter, wd=wd, sleep_between_interactions=0.5)
+        fetch_image_urls(search_term, number_images, result_start, size_filter,target_folder, wd=wd, sleep_between_interactions=0.5)
 
-    for elem in res:
-        persist_image(target_folder, elem)
+    # for elem in res:
+    #     persist_image(target_folder, elem)
 
 
 keyword_to_search = input("Enter the keyword to search: ")
