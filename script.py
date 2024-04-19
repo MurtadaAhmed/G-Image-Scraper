@@ -15,8 +15,8 @@ from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 
 cookies_accept_button_id = 'L2AGLb'
-cookies_accept_button_id_2 = "VfPpkd-vQzf8d"
-thumdnail_class_css_selector = 'img.YQ4gaf'
+cookies_accept_button_id_2 = "VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.XWZjwc"
+thumdnail_class_xpath_selector = '//img[@class="YQ4gaf"]'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 close_image_review_button = 'button.uj1Jfd.wv9iH.iM6qI'
@@ -29,7 +29,7 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -38,8 +38,15 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
         wd.execute_script("window.scrollTo(0, 0);")
         time.sleep(sleep_between_interactions)
 
-    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"
+    if size_filter == "l":
+        size_filter = '&tbs=isz:l'
+    elif size_filter == "m":
+        size_filter = '&tbs=isz:m'
+    elif size_filter == "i":
+        size_filter = '&tbs=isz:i'
 
+    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img" + size_filter
+    print(f"DEBUG - search_url: {search_url.format(q=query)}")
     wd.get(search_url.format(q=query))
 
     try:
@@ -48,49 +55,46 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
         )
         accept_cookies_button.click()
     except Exception as e:
-        print(f"Error accepting cookies: {e}")
+        print(f"Error accepting cookies 1: {e}")
 
     try:
+        scroll_to_end(wd)
         accept_cookies_button_2 = WebDriverWait(wd, 1).until(
             EC.presence_of_element_located((By.ID, cookies_accept_button_id_2))
         )
         accept_cookies_button_2.click()
     except Exception as e:
-        print(f"Error accepting cookies: {e}")
+        print(f"Error accepting cookies 2: {e}")
 
     image_urls = set()
     image_count = 0
-    result_start = 0
 
     scroll_to_end(wd)
     scroll_to_end(wd)
     scroll_to_end(wd)
     scroll_to_top(wd)
-
+    end_index = result_start_index + max_links_to_fetch
     while image_count < max_links_to_fetch:
 
-        thumbnail_results = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)
+        thumbnail_results = wd.find_elements(By.XPATH, thumdnail_class_xpath_selector)
+        thumbnail_results = thumbnail_results[result_start_index:]
         number_results = len(thumbnail_results)
 
-        print(f"Found {number_results} search results. Extracting links from {result_start}:{number_results}")
+        print(f"Found {number_results} search results. Extracting links from {result_start_index}:{end_index}")
 
         counter = 1
-
-        number_results = len(wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector))
         counteven = 0
-        for index in range(number_results):
-            img = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)[index+result_start]
 
+        for img in thumbnail_results:
             try:
-                img = wd.find_elements(By.CSS_SELECTOR, thumdnail_class_css_selector)[index]
                 wd.execute_script("arguments[0].scrollIntoView();", img)
                 ActionChains(wd).move_to_element(img).perform()
                 original_window = wd.current_window_handle
-                if counteven % 2 == 0:
-                    img.click()
+
+                img.click()
                 time.sleep(sleep_between_interactions)
                 print(f"{counter}. Clicked on {img}")
-                counteven += 1
+
                 counter += 1
                 wd.switch_to.window(original_window)
             except Exception as e:
@@ -103,12 +107,11 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
 
                 img_url = actual_image.get_attribute("src")
-
+                counteven += 1
             except Exception as e:
                 print(f"{counter}. Error finding full image: {e}")
+                counter += 1
                 continue
-
-
 
             print(f"{counter}. Found image: {img_url}")
             image_urls.add(img_url)
@@ -129,7 +132,6 @@ def fetch_image_urls(query, max_links_to_fetch, wd, sleep_between_interactions):
             print(f"Found {len(image_urls)} image links, looking for more...")
 
         # scroll_to_end(wd)
-        result_start = len(thumbnail_results)
     print("**************************")
     print("Breaking WHILE loop")
     return image_urls
@@ -165,7 +167,7 @@ def persist_image(folder_path, url):
         print(f"Error - could not save {url} - {e}")
 
 
-def search_and_download(search_term, driver_path, number_images=10, target_path="./images"):
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter,  target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
     if not os.path.exists(target_folder):
@@ -180,14 +182,27 @@ def search_and_download(search_term, driver_path, number_images=10, target_path=
     options.headless = True
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        res = fetch_image_urls(search_term, number_images, wd=wd, sleep_between_interactions=0.5)
+        res = fetch_image_urls(search_term, number_images, result_start, size_filter, wd=wd, sleep_between_interactions=0.5)
 
     for elem in res:
         persist_image(target_folder, elem)
 
 
 keyword_to_search = input("Enter the keyword to search: ")
-number_of_images_to_download = int(input("Enter the number of images to download (default 10): "))
-
-search_and_download(keyword_to_search, geckodriver_path, number_of_images_to_download)
+while not keyword_to_search:
+    keyword_to_search = input("You must enter the keyword to search: ")
+number_of_images_to_download = input("Enter the number of images to download: ")
+while not number_of_images_to_download:
+    number_of_images_to_download = input("You must enter the number of images to download: ")
+while not number_of_images_to_download.isdigit():
+    number_of_images_to_download = input("You must enter a 'number' for the number of images to download: ")
+result_start = input("Enter the start number for the images (default 0): ")
+while not result_start:
+    result_start = input("You must enter the start number for the images: ")
+while not result_start.isdigit():
+    result_start = input("You must enter a 'number' for the start number for the images: ")
+image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
+while image_size not in ["l", "m", "i", ""]:
+    image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
+search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start), image_size)
 input("Press Enter to exit...")
