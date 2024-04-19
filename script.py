@@ -29,7 +29,7 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, wd, sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -38,8 +38,15 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, wd, sleep_be
         wd.execute_script("window.scrollTo(0, 0);")
         time.sleep(sleep_between_interactions)
 
-    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"
+    if size_filter == "l":
+        size_filter = '&tbs=isz:l'
+    elif size_filter == "m":
+        size_filter = '&tbs=isz:m'
+    elif size_filter == "i":
+        size_filter = '&tbs=isz:i'
 
+    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img" + size_filter
+    print(f"DEBUG - search_url: {search_url.format(q=query)}")
     wd.get(search_url.format(q=query))
 
     try:
@@ -61,7 +68,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, wd, sleep_be
 
     image_urls = set()
     image_count = 0
-
 
     scroll_to_end(wd)
     scroll_to_end(wd)
@@ -106,8 +112,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, wd, sleep_be
                 print(f"{counter}. Error finding full image: {e}")
                 counter += 1
                 continue
-
-
 
             print(f"{counter}. Found image: {img_url}")
             image_urls.add(img_url)
@@ -163,7 +167,7 @@ def persist_image(folder_path, url):
         print(f"Error - could not save {url} - {e}")
 
 
-def search_and_download(search_term, driver_path, number_images, result_start, target_path="./images"):
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter,  target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
     if not os.path.exists(target_folder):
@@ -178,7 +182,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, t
     options.headless = True
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        res = fetch_image_urls(search_term, number_images,result_start,  wd=wd, sleep_between_interactions=0.5)
+        res = fetch_image_urls(search_term, number_images, result_start, size_filter, wd=wd, sleep_between_interactions=0.5)
 
     for elem in res:
         persist_image(target_folder, elem)
@@ -197,5 +201,8 @@ while not result_start:
     result_start = input("You must enter the start number for the images: ")
 while not result_start.isdigit():
     result_start = input("You must enter a 'number' for the start number for the images: ")
-search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start))
+image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
+while image_size not in ["l", "m", "i", ""]:
+    image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
+search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start), image_size)
 input("Press Enter to exit...")
