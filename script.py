@@ -13,6 +13,29 @@ from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
+import subprocess
+
+print("********************************************")
+print("********** G-Image-Scraper *********")
+print("********************************************")
+
+
+def is_imagemagick_installed():
+    try:
+        subprocess.check_output(['magick', '-version'], stderr=subprocess.STDOUT)
+        return True
+    except Exception:
+        return False
+
+
+print("Checking if ImageMagick dependencies are installed...")
+if is_imagemagick_installed():
+    print("ImageMagick is installed")
+
+if not is_imagemagick_installed():
+    print("ImageMagick is not installed. Please install it from https://imagemagick.org/script/download.php and "
+          "restart the program.")
+    sys.exit(1)
 
 cookies_accept_button_id = 'L2AGLb'
 cookies_accept_button_id_2 = "VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.XWZjwc"
@@ -29,7 +52,8 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, target_folder, wd, sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, target_folder, wd,
+                     sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -118,7 +142,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             if download:
                 image_urls.add(img_url)
 
-
             image_count = len(image_urls)
 
             print("**************************")
@@ -166,7 +189,6 @@ def persist_image(folder_path, url):
             f.write(image_content)
         print(f"Success - saved {url} - as {file_path}")
 
-
         with open(os.path.join(folder_path, "image_info.txt"), "a") as f:
             f.write(f"{os.path.basename(file_path)}: {url}\n")
         return True
@@ -175,7 +197,7 @@ def persist_image(folder_path, url):
         return False
 
 
-def search_and_download(search_term, driver_path, number_images, result_start, size_filter,  target_path="./images"):
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter, target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
     if not os.path.exists(target_folder):
@@ -190,7 +212,8 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     options.headless = True
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        fetch_image_urls(search_term, number_images, result_start, size_filter,target_folder, wd=wd, sleep_between_interactions=0.5)
+        fetch_image_urls(search_term, number_images, result_start, size_filter, target_folder, wd=wd,
+                         sleep_between_interactions=0.5)
 
     # for elem in res:
     #     persist_image(target_folder, elem)
@@ -212,5 +235,6 @@ while not result_start.isdigit():
 image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
 while image_size not in ["l", "m", "i", ""]:
     image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
-search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start), image_size)
+search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
+                    image_size)
 input("Press Enter to exit...")
