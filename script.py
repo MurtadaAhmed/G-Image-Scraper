@@ -32,10 +32,10 @@ print("Checking if ImageMagick dependencies are installed...")
 if is_imagemagick_installed():
     print("ImageMagick is installed")
 
-#if not is_imagemagick_installed():
-#    print("ImageMagick is not installed. Please install it from https://imagemagick.org/script/download.php and "
-#          "restart the program.")
-#    sys.exit(1)
+if not is_imagemagick_installed():
+    print("ImageMagick is not installed. Please install it from https://imagemagick.org/script/download.php and "
+          "restart the program.")
+    sys.exit(1)
 
 cookies_accept_button_id = 'L2AGLb'
 cookies_accept_button_id_2 = "VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.XWZjwc"
