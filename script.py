@@ -38,7 +38,7 @@ if not is_imagemagick_installed():
     sys.exit(1)
 
 cookies_accept_button_id = 'L2AGLb'
-cookies_accept_button_id_2 = "//*[@id="yDmH0d"]/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button"
+cookies_accept_button_id_2 = "//*[@id='yDmH0d']/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button"
 thumdnail_class_xpath_selector = '//img[@class="YQ4gaf"]'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
