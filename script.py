@@ -5,6 +5,8 @@ import requests
 from PIL import Image
 import io
 import hashlib
+
+from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,6 +16,7 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 import subprocess
+from selenium.common.exceptions import NoSuchFrameException
 
 print("********************************************")
 print("********** G-Image-Scraper *********")
@@ -43,7 +46,10 @@ thumdnail_class_xpath_selector = '//img[@class="YQ4gaf"]'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 close_image_review_button = 'button.uj1Jfd.wv9iH.iM6qI'
-supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX', 'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG']
+supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX', 'PNG', 'PPM',
+                              'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG']
+need_to_check_secondary_images = True
+secondary_image_button = "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
 
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
@@ -53,8 +59,7 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, target_folder, wd,
-                     sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, target_folder, wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -114,14 +119,51 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             try:
                 wd.execute_script("arguments[0].scrollIntoView();", img)
                 ActionChains(wd).move_to_element(img).perform()
-                original_window = wd.current_window_handle
+
+
+
+                # ...
+
+                if need_to_check_secondary_images:
+                    ActionChains(wd).key_down(Keys.CONTROL).click(img).key_up(Keys.CONTROL).perform()
+                    time.sleep(sleep_between_interactions)
+                    print(f"{counter}. Clicked + CTRL on {img}")
+                    windows_handles = wd.window_handles
+                    wd.switch_to.window(windows_handles[-1])
+                    print(wd.current_url)
+                    time.sleep(2)
+
+                    # Wait for the element to be present in the DOM, and then scroll it into view
+                    try:
+                        second_button = WebDriverWait(wd, 10).until(
+                            EC.presence_of_element_located((By.XPATH, secondary_image_button)))
+
+                        second_button_url = second_button.get_attribute("href")
+                        print(f"Second button URL: {second_button_url}")
+                        wd.get(second_button_url)
+                        scroll_to_end(wd)
+                        scroll_to_top(wd)
+
+                        print(second_button)
+
+                        # *********************************************
+
+
+                        # *********************************************
+                        wd.close()
+                        wd.switch_to.window(windows_handles[0])
+                    except Exception as e:
+                        print(f"Error finding second button: {e}")
+                        counter += 1
+
+
 
                 img.click()
                 time.sleep(sleep_between_interactions)
                 print(f"{counter}. Clicked on {img}")
 
                 counter += 1
-                wd.switch_to.window(original_window)
+
             except Exception as e:
                 print(f"{counter}. Error clicking on {img}: {e}")
                 counter += 1
@@ -156,6 +198,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 break
 
         else:
+            time.sleep(300)
             print(f"Found {len(image_urls)} image links, looking for more...")
 
         # scroll_to_end(wd)
@@ -211,7 +254,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Specify the path to the Firefox binary
     options = Options()
     options.binary_location = firefox_path
-    options.add_argument("-headless")
+    # options.add_argument("-headless")
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, target_folder, wd=wd,
@@ -219,6 +262,8 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
 
     # for elem in res:
     #     persist_image(target_folder, elem)
+
+
 
 
 keyword_to_search = input("Enter the keyword to search: ")
@@ -240,3 +285,4 @@ while image_size not in ["l", "m", "i", ""]:
 search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
                     image_size)
 input("Press Enter to exit...")
+
