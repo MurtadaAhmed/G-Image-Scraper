@@ -209,7 +209,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Specify the path to the Firefox binary
     options = Options()
     options.binary_location = firefox_path
-    options.headless = True
+    options.add_argument("-headless")
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, target_folder, wd=wd,
