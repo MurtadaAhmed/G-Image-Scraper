@@ -43,6 +43,7 @@ thumdnail_class_xpath_selector = '//img[@class="YQ4gaf"]'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 close_image_review_button = 'button.uj1Jfd.wv9iH.iM6qI'
+supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX', 'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG']
 
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
@@ -151,6 +152,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"found: {len(image_urls)} image links")
                 print("**************************")
                 print("Breaking FOR loop")
+                os.startfile(target_folder)
                 break
 
         else:
@@ -173,7 +175,7 @@ def persist_image(folder_path, url):
 
     try:
         image_extension = url.rsplit('.', 1)[-1]
-        if not image_extension or len(image_extension) > 4:
+        if not image_extension or len(image_extension) > 4 or image_extension.upper() not in supported_image_extensions:
             image_extension = 'jpg'
         if url.endswith(".svg"):
             with WandImage(blob=image_content) as img:
