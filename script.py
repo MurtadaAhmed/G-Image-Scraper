@@ -128,12 +128,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 counter += 1
 
             except Exception as e:
-                print(f"{counter}. Error clicking on {img}.")
+                print(f"Error clicking on image.")
                 counter += 1
                 continue
 
             try:
-                actual_image = WebDriverWait(wd, 5).until(
+                actual_image = WebDriverWait(wd, 2).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
 
                 img_url = actual_image.get_attribute("src")
@@ -144,7 +144,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 continue
             source_page_url = ""
             try:
-                source_page = WebDriverWait(wd, 5).until(
+                source_page = WebDriverWait(wd, 2).until(
                     EC.presence_of_element_located((By.XPATH, image_source_page))
                 )
                 source_page_url = source_page.get_attribute("href")
@@ -181,7 +181,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"Current secondary URL: {wd.current_url}")
 
                 try:
-                    second_button = WebDriverWait(wd, 10).until(
+                    second_button = WebDriverWait(wd, 2).until(
                         EC.presence_of_element_located((By.XPATH, secondary_image_button)))
 
                     second_button_url = second_button.get_attribute("href")
@@ -227,7 +227,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
                             source_page_url2 = ""
                             try:
-                                source_page = WebDriverWait(wd, 5).until(
+                                source_page = WebDriverWait(wd, 2).until(
                                     EC.presence_of_element_located((By.CSS_SELECTOR, image_source_page2))
                                 )
                                 source_page_url2 = source_page.get_attribute("href")
@@ -263,7 +263,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         break
                 except Exception as e:
                     print(f"Error finding second button: {e}")
+                    wd.close()
+                    wd.switch_to.window(windows_handles[0])
                     counter += 1
+                    continue
             else:
                 print("Not checking secondary images")
             # **************************************************************************
@@ -305,6 +308,11 @@ def persist_image(folder_path, url, page_source_url):
             image = Image.open(image_file).convert('RGB')
 
         file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + "." + image_extension)
+
+        if os.path.exists(file_path):
+            print(f"The file {url} already exists in the folder.")
+            return False
+
         with open(file_path, "wb") as f:
             f.write(image_content)
         print(f"Success - saved {url} - as {file_path}")
