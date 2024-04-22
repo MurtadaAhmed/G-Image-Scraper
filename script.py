@@ -358,21 +358,24 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
 keyword_to_search = input("Enter the keyword to search: ")
 while not keyword_to_search:
     keyword_to_search = input("You must enter the keyword to search: ")
-number_of_images_to_download = input("Enter the number of images to download: ")
+
+number_of_images_to_download = input("Please tell me how many main photos should I download :): ")
 while not number_of_images_to_download:
-    number_of_images_to_download = input("You must enter the number of main images to download: ")
+    number_of_images_to_download = input("Dont play with me, how many main photos should I check?? :( : ")
 while not number_of_images_to_download.isdigit():
     number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
+
 result_start = input("Enter the start number for the images (default 0): ")
-while not result_start:
-    result_start = input("You must enter the start number for the images: ")
+if not result_start:
+    result_start = 0
 while not result_start.isdigit():
     result_start = input("You must enter a 'number' for the start number for the images: ")
+
 image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
 while image_size not in ["l", "m", "i", ""]:
     image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
 
-max_secondary_images = input("Enter the maximum number of secondary images: Default is 0: ")
+max_secondary_images = input("Enter the number of secondary images per main one: Default is 0: ")
 while not max_secondary_images.isdigit() or not max_secondary_images:
     print("You must enter a number for maximum secondary images")
 if int(max_secondary_images) > 0:
