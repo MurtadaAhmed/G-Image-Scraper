@@ -50,6 +50,7 @@ supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 
                               'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG']
 need_to_check_secondary_images = False
 secondary_image_button = "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
+image_source_page = "/html/body/div[7]/div/div/div/div/div/div/c-wiz/div/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a[2]"
 
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
@@ -124,7 +125,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 img.click()
                 time.sleep(sleep_between_interactions)
 
-
                 counter += 1
 
             except Exception as e:
@@ -142,9 +142,17 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"{counter}. Error finding full image: {e}")
                 counter += 1
                 continue
-
+            try:
+                source_page = WebDriverWait(wd, 5).until(
+                    EC.presence_of_element_located((By.XPATH, image_source_page))
+                )
+                source_page_url = source_page.get_attribute("href")
+                print(f"Source page URL: {source_page_url}")
+            except Exception as e:
+                print(f"Error finding source page: {e}")
             print(f"Found image: {img_url}")
-            download = persist_image(target_folder, img_url)
+
+            download = persist_image(target_folder, img_url, source_page_url)
             if download:
                 image_urls.add(img_url)
 
@@ -212,8 +220,18 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 counter += 1
                                 continue
 
+                            try:
+                                source_page = WebDriverWait(wd, 5).until(
+                                    EC.presence_of_element_located((By.XPATH, image_source_page))
+                                )
+                                source_page_url = source_page.get_attribute("href")
+                                print(f"Source page URL: {source_page_url}")
+                            except Exception as e:
+                                print(f"Error finding source page: {e}")
+                            print(f"Found image: {img_url}")
 
-                            download = persist_image(target_folder, img_url2)
+                            download = persist_image(target_folder, img_url, source_page_url)
+
                             if download:
                                 image_urls.add(img_url2)
 
@@ -259,7 +277,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     return image_urls
 
 
-def persist_image(folder_path, url):
+def persist_image(folder_path, url, page_source_url):
     print(f"URL: {url}")
     try:
         image_content = requests.get(url, timeout=5).content
@@ -290,7 +308,7 @@ def persist_image(folder_path, url):
         print(f"Success - saved {url} - as {file_path}")
 
         with open(os.path.join(folder_path, "image_info.txt"), "a") as f:
-            f.write(f"{os.path.basename(file_path)}: {url}\n")
+            f.write(f"{os.path.basename(file_path)}: {page_source_url}\n")
         return True
     except Exception as e:
         print(f"Error - could not save {url} - {e}")
@@ -343,7 +361,6 @@ while not max_secondary_images.isdigit() or not max_secondary_images:
     print("You must enter a number for maximum secondary images")
 if int(max_secondary_images) > 0:
     need_to_check_secondary_images = True
-
 
 search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
                     image_size, int(max_secondary_images))
