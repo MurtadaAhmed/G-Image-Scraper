@@ -51,7 +51,7 @@ supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 
 need_to_check_secondary_images = False
 secondary_image_button = "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
 image_source_page = "/html/body/div[7]/div/div/div/div/div/div/c-wiz/div/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a[2]"
-
+image_source_page2 = "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)"
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
 else:
@@ -115,7 +115,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         print(f"There are {number_results} search results in the main page.")
 
         counter = 1
-        counteven = 0
+
 
         for img in thumbnail_results:
             try:
@@ -128,7 +128,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 counter += 1
 
             except Exception as e:
-                print(f"{counter}. Error clicking on {img}: {e}")
+                print(f"{counter}. Error clicking on {img}.")
                 counter += 1
                 continue
 
@@ -137,11 +137,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
 
                 img_url = actual_image.get_attribute("src")
-                counteven += 1
+
             except Exception as e:
                 print(f"{counter}. Error finding full image: {e}")
                 counter += 1
                 continue
+            source_page_url = ""
             try:
                 source_page = WebDriverWait(wd, 5).until(
                     EC.presence_of_element_located((By.XPATH, image_source_page))
@@ -150,9 +151,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"Source page URL: {source_page_url}")
             except Exception as e:
                 print(f"Error finding source page: {e}")
-            print(f"Found image: {img_url}")
 
-            download = persist_image(target_folder, img_url, source_page_url)
+            download = ""
+            if img_url:
+                print(f"Found image: {img_url}")
+                download = persist_image(target_folder, img_url, source_page_url)
+
             if download:
                 image_urls.add(img_url)
 
@@ -187,8 +191,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     scroll_to_top(wd)
 
                     secondary_image_counter = 0
-                    while image_count < max_links_to_fetch:
-                        if secondary_image_counter == max_secondary_images:
+                    while image_count < max_secondary_images:
+                        if secondary_image_counter >= max_secondary_images:
                             break
                         thumbnail_results2 = wd.find_elements(By.XPATH, thumdnail_class_xpath_selector)
                         thumbnail_results2 = thumbnail_results2[result_start_index:]
@@ -205,48 +209,46 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 counter += 1
 
                             except Exception as e:
-                                print(f"Error clicking on secondary image{img2}: {e}")
+                                print(f"Error clicking on secondary image{img2}.")
                                 counter += 1
                                 continue
+
 
                             try:
                                 actual_image2 = WebDriverWait(wd, 2).until(
                                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
 
                                 img_url2 = actual_image2.get_attribute("src")
-                                counteven += 1
+
                             except Exception as e:
-                                print(f"Error finding full secondary image: {e}")
+                                print(f"Error finding full secondary image.")
                                 counter += 1
                                 continue
 
+                            source_page_url2 = ""
                             try:
                                 source_page = WebDriverWait(wd, 5).until(
-                                    EC.presence_of_element_located((By.XPATH, image_source_page))
+                                    EC.presence_of_element_located((By.CSS_SELECTOR, image_source_page2))
                                 )
-                                source_page_url = source_page.get_attribute("href")
-                                print(f"Source page URL: {source_page_url}")
+                                source_page_url2 = source_page.get_attribute("href")
+                                print(f"Source page URL: {source_page_url2}")
                             except Exception as e:
-                                print(f"Error finding source page: {e}")
+                                print(f"Error finding source page.")
                             print(f"Found image: {img_url}")
 
-                            download = persist_image(target_folder, img_url, source_page_url)
+                            if img_url2:
+                                download = persist_image(target_folder, img_url2, source_page_url2)
 
                             if download:
-                                image_urls.add(img_url2)
+                                secondary_image_counter += 1
 
                             image_count = len(image_urls)
-                            secondary_image_counter += 1
+
 
                             print("**************************")
                             print(f"Image count: {image_count}, max_links_to_fetch: {max_links_to_fetch}")
                             print("**************************")
-                            if len(image_urls) >= max_links_to_fetch:
-                                print(f"found: {len(image_urls)} image links")
-                                print("**************************")
 
-                                os.startfile(target_folder)
-                                break
                             if secondary_image_counter == max_secondary_images:
                                 print(f"Already downloaded {max_secondary_images} secondary images.")
                                 print("Returning to the main page")
