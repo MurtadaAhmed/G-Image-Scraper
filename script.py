@@ -50,7 +50,7 @@ supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 
                               'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG']
 need_to_check_secondary_images = False
 secondary_image_button = "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
-image_source_page = "/html/body/div[7]/div/div/div/div/div/div/c-wiz/div/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a[2]"
+image_source_page = "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > a:nth-child(2)"
 image_source_page2 = "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)"
 if getattr(sys, 'frozen', False):
     script_dir = sys._MEIPASS  # If running as executable
@@ -87,7 +87,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         )
         accept_cookies_button.click()
     except Exception as e:
-        print(f"Error accepting cookies 1")
+        ...
 
     try:
         scroll_to_end(wd)
@@ -96,17 +96,17 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         )
         accept_cookies_button_2.click()
     except Exception as e:
-        print(f"Error accepting cookies 2")
+        ...
 
     image_urls = set()
-    image_count = 0
+    main_image_count = 0
 
     scroll_to_end(wd)
     scroll_to_end(wd)
     scroll_to_end(wd)
     scroll_to_top(wd)
     end_index = result_start_index + max_links_to_fetch
-    while image_count < max_links_to_fetch:
+    while main_image_count < max_links_to_fetch:
 
         thumbnail_results = wd.find_elements(By.XPATH, thumdnail_class_xpath_selector)
         thumbnail_results = thumbnail_results[result_start_index:]
@@ -115,7 +115,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         print(f"There are {number_results} search results in the main page.")
 
         counter = 1
-
 
         for img in thumbnail_results:
             try:
@@ -141,11 +140,11 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             except Exception as e:
                 print(f"{counter}. Error finding full image: {e}")
                 counter += 1
-                continue
+                # continue
             source_page_url = ""
             try:
                 source_page = WebDriverWait(wd, 2).until(
-                    EC.presence_of_element_located((By.XPATH, image_source_page))
+                    EC.presence_of_element_located((By.CSS_SELECTOR, image_source_page))
                 )
                 source_page_url = source_page.get_attribute("href")
                 print(f"Source page URL: {source_page_url}")
@@ -160,17 +159,18 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             if download:
                 image_urls.add(img_url)
 
-            image_count = len(image_urls)
+
+            main_image_count = len(image_urls)
 
             print("**************************")
-            print(f"Image count: {image_count}, max_links_to_fetch: {max_links_to_fetch}")
+            print(f"Main image count: {main_image_count}, max_links_to_fetch: {max_links_to_fetch}")
             print("**************************")
-            if len(image_urls) >= max_links_to_fetch:
-                print(f"found: {len(image_urls)} image links")
-                print("**************************")
-
-                os.startfile(target_folder)
-                break
+            # if len(image_urls) >= max_links_to_fetch:
+            #     print(f"found: {len(image_urls)} image links")
+            #     print("**************************")
+            #
+            #     os.startfile(target_folder)
+            #     break
 
             # **************************************************************************
             if need_to_check_secondary_images:
@@ -191,9 +191,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     scroll_to_top(wd)
 
                     secondary_image_counter = 0
-                    while image_count < max_secondary_images:
-                        if secondary_image_counter >= max_secondary_images:
-                            break
+                    while secondary_image_counter < max_secondary_images:
                         thumbnail_results2 = wd.find_elements(By.XPATH, thumdnail_class_xpath_selector)
                         thumbnail_results2 = thumbnail_results2[result_start_index:]
                         number_results2 = len(thumbnail_results2)
@@ -212,7 +210,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 print(f"Error clicking on secondary image{img2}.")
                                 counter += 1
                                 continue
-
 
                             try:
                                 actual_image2 = WebDriverWait(wd, 2).until(
@@ -242,11 +239,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                             if download:
                                 secondary_image_counter += 1
 
-                            image_count = len(image_urls)
-
+                            main_image_count = len(image_urls)
 
                             print("**************************")
-                            print(f"Image count: {image_count}, max_links_to_fetch: {max_links_to_fetch}")
+                            print(f"Main image count: {main_image_count}\n"
+                                  f"Seconday image count: {secondary_image_counter}\n"
+                                  f"Max main images: {max_links_to_fetch}")
                             print("**************************")
 
                             if secondary_image_counter == max_secondary_images:
@@ -260,9 +258,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     wd.close()
                     wd.switch_to.window(windows_handles[0])
                     if len(image_urls) >= max_links_to_fetch:
+                        os.startfile(target_folder)
                         break
                 except Exception as e:
-                    print(f"Error finding second button: {e}")
+                    print(f"Error finding second button.")
                     wd.close()
                     wd.switch_to.window(windows_handles[0])
                     counter += 1
@@ -270,8 +269,15 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             else:
                 print("Not checking secondary images")
             # **************************************************************************
+
             if len(image_urls) >= max_links_to_fetch:
+                print(f"found: {len(image_urls)} image links")
+                print("**************************")
+
+                os.startfile(target_folder)
                 break
+
+
         else:
 
             print(f"Found {len(image_urls)} image links, looking for more...")
@@ -354,9 +360,9 @@ while not keyword_to_search:
     keyword_to_search = input("You must enter the keyword to search: ")
 number_of_images_to_download = input("Enter the number of images to download: ")
 while not number_of_images_to_download:
-    number_of_images_to_download = input("You must enter the number of images to download: ")
+    number_of_images_to_download = input("You must enter the number of main images to download: ")
 while not number_of_images_to_download.isdigit():
-    number_of_images_to_download = input("You must enter a 'number' for the number of images to download: ")
+    number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
 result_start = input("Enter the start number for the images (default 0): ")
 while not result_start:
     result_start = input("You must enter the start number for the images: ")
