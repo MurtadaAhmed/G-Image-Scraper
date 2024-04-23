@@ -132,7 +132,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 continue
 
             try:
-                actual_image = WebDriverWait(wd, 2).until(
+                actual_image = WebDriverWait(wd, 5).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
 
                 img_url = actual_image.get_attribute("src")
@@ -178,6 +178,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 time.sleep(sleep_between_interactions)
                 windows_handles = wd.window_handles
                 wd.switch_to.window(windows_handles[-1])
+                current_url_safe_search_off = wd.current_url + "&safe=off"
+                wd.get(current_url_safe_search_off)
                 print(f"Current secondary URL: {wd.current_url}")
 
                 try:
