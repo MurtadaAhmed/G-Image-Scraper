@@ -44,6 +44,7 @@ cookies_accept_button_id = 'L2AGLb'
 cookies_accept_button_id_2 = "//*[@id='yDmH0d']/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button"
 thumdnail_class_xpath_selector = '//img[@class="YQ4gaf"]'
 full_image_class_css_selector = 'img.sFlh5c.pT0Scc.iPVvYb'
+
 firefox_path = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 close_image_review_button = 'button.uj1Jfd.wv9iH.iM6qI'
 supported_image_extensions = ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX', 'PNG', 'PPM',
@@ -60,7 +61,7 @@ else:
 geckodriver_path = os.path.join(script_dir, 'geckodriver.exe')
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder, headless,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -264,6 +265,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         print("Search complete.")
                         wd.quit()
                         need_to_open_folder_after_finishing(target_folder)
+                        os._exit(0)
                         break
                 except Exception as e:
                     print(f"Error finding second button.")
@@ -280,6 +282,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print("**************************")
                 wd.quit()
                 need_to_open_folder_after_finishing(target_folder)
+                os._exit(0)
                 break
 
 
@@ -336,7 +339,7 @@ def persist_image(folder_path, url, page_source_url):
         return False
 
 
-def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images,
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images, headless,
                         target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
@@ -349,10 +352,12 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Specify the path to the Firefox binary
     options = Options()
     options.binary_location = firefox_path
-    # options.add_argument("-headless")
+    if headless:
+        options.add_argument("-headless")
+
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
+        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,headless,
                          wd=wd,
                          sleep_between_interactions=1)
 
@@ -388,8 +393,15 @@ def main_inputs():
         global need_to_check_secondary_images
         need_to_check_secondary_images = True
 
+    with_browser = input("Do you want to search with the browser? (y/n): ")
+    while with_browser not in ["y", "n"]:
+        with_browser = input("You must enter 'y' or 'n': ")
+    if with_browser == "n":
+        search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
+                            image_size, int(max_secondary_images), headless=True)
+
     search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                        image_size, int(max_secondary_images))
+                        image_size, int(max_secondary_images), headless=False)
 
 
 def need_to_open_folder_after_finishing(target_folder):
@@ -407,6 +419,6 @@ def need_to_open_folder_after_finishing(target_folder):
     else:
         print("Goodbye")
         input("Press any key to exit...")
-
+        os._exit(0)
 
 main_inputs()
