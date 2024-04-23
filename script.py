@@ -131,6 +131,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 counter += 1
                 continue
 
+            img_url = ""
             try:
                 actual_image = WebDriverWait(wd, 5).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, full_image_class_css_selector)))
@@ -152,13 +153,13 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"Error finding source page: {e}")
 
             download = ""
+
             if img_url:
                 print(f"Found image: {img_url}")
                 download = persist_image(target_folder, img_url, source_page_url)
 
             if download:
                 image_urls.add(img_url)
-
 
             main_image_count = len(image_urls)
 
@@ -260,7 +261,9 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     wd.close()
                     wd.switch_to.window(windows_handles[0])
                     if len(image_urls) >= max_links_to_fetch:
-                        os.startfile(target_folder)
+                        print("Search complete.")
+                        wd.quit()
+                        need_to_open_folder_after_finishing(target_folder)
                         break
                 except Exception as e:
                     print(f"Error finding second button.")
@@ -275,8 +278,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             if len(image_urls) >= max_links_to_fetch:
                 print(f"found: {len(image_urls)} image links")
                 print("**************************")
-
-                os.startfile(target_folder)
+                wd.quit()
+                need_to_open_folder_after_finishing(target_folder)
                 break
 
 
@@ -346,7 +349,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Specify the path to the Firefox binary
     options = Options()
     options.binary_location = firefox_path
-    #options.add_argument("-headless")
+    # options.add_argument("-headless")
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
@@ -357,32 +360,53 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     #     persist_image(target_folder, elem)
 
 
-keyword_to_search = input("Enter the keyword to search: ")
-while not keyword_to_search:
-    keyword_to_search = input("You must enter the keyword to search: ")
+def main_inputs():
+    keyword_to_search = input("Enter the keyword to search: ")
+    while not keyword_to_search:
+        keyword_to_search = input("You must enter the keyword to search: ")
 
-number_of_images_to_download = input("Please tell me how many main photos should I download :): ")
-while not number_of_images_to_download:
-    number_of_images_to_download = input("Dont play with me, how many main photos should I check?? :( : ")
-while not number_of_images_to_download.isdigit():
-    number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
+    number_of_images_to_download = input("Please tell me how many main photos should I download :): ")
+    while not number_of_images_to_download:
+        number_of_images_to_download = input("Dont play with me, how many main photos should I check?? :( : ")
+    while not number_of_images_to_download.isdigit():
+        number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
 
-result_start = input("Enter the start number for the images (default 0): ")
-if not result_start:
-    result_start = 0
-while not result_start.isdigit():
-    result_start = input("You must enter a 'number' for the start number for the images: ")
+    result_start = input("Enter the start number for the images (default 0): ")
+    if not result_start:
+        result_start = 0
+    while not result_start.isdigit():
+        result_start = input("You must enter a 'number' for the start number for the images: ")
 
-image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
-while image_size not in ["l", "m", "i", ""]:
-    image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
+    image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
+    while image_size not in ["l", "m", "i", ""]:
+        image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
 
-max_secondary_images = input("Enter the number of secondary images per main one: Default is 0: ")
-while not max_secondary_images.isdigit() or not max_secondary_images:
-    print("You must enter a number for maximum secondary images")
-if int(max_secondary_images) > 0:
-    need_to_check_secondary_images = True
+    max_secondary_images = input("Enter the number of secondary images per main one: Default is 0: ")
+    while not max_secondary_images.isdigit() or not max_secondary_images:
+        max_secondary_images = input("You must enter a number for maximum secondary images: ")
+    if int(max_secondary_images) > 0:
+        global need_to_check_secondary_images
+        need_to_check_secondary_images = True
 
-search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                    image_size, int(max_secondary_images))
-input("Press Enter to exit...")
+    search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
+                        image_size, int(max_secondary_images))
+
+
+def need_to_open_folder_after_finishing(target_folder):
+    open_folder = input("Do you want me to open the folder with the images? (y/n): ")
+    while open_folder not in ["y", "n"]:
+        open_folder = input("You must enter 'y' or 'n': ")
+    if open_folder == "y":
+        os.startfile(target_folder)
+
+    another_search = input("Do you want to do another search? (y/n): ")
+    while another_search not in ["y", "n"]:
+        another_search = input("You must enter 'y' or 'n': ")
+    if another_search == "y":
+        main_inputs()
+    else:
+        print("Goodbye")
+        input("Press any key to exit...")
+
+
+main_inputs()
