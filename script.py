@@ -16,7 +16,6 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 import subprocess
-from selenium.common.exceptions import NoSuchFrameException
 
 print("********************************************")
 print("********** G-Image-Scraper *********")
@@ -56,28 +55,33 @@ geckodriver_path = os.path.join(get_the_path(), "geckodriver.exe")
 
 
 def get_config():
-    config = {
+    variables = {
         'cookies_accept_button_id': 'L2AGLb',
-        'cookies_accept_button_id_2': "//*[@id='yDmH0d']/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button",
-        'thumdnail_class_xpath_selector': '//img[@class="YQ4gaf"]',
+        'cookies_accept_button_id_2': "//*[@id='yDmH0d']/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form["
+                                      "2]/div/div/button",
+        'thumbnail_class_xpath_selector': '//img[@class="YQ4gaf"]',
         'full_image_class_css_selector': 'img.sFlh5c.pT0Scc.iPVvYb',
         'firefox_path': r'C:\Program Files\Mozilla Firefox\firefox.exe',
         'supported_image_extensions': ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX',
                                        'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG'],
         'need_to_check_secondary_images': False,
-        'secondary_image_button': "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a",
-        'image_source_page': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > a:nth-child(2)",
-        'image_source_page2': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)"
+        'secondary_image_button': "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
+                                  "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a",
+        'image_source_page': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > "
+                             "div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > "
+                             "div:nth-child(1) > a:nth-child(2)",
+        'image_source_page2': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > "
+                              "div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > "
+                              "div:nth-child(1) > a:nth-child(1)"
 
     }
-    return config
+    return variables
 
 
 config = get_config()
 
 
 def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
-                     headless,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -96,7 +100,9 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img" + size_filter
     print(f"Search_url: {search_url.format(q=query)}")
+
     wd.get(search_url.format(q=query))
+    print("Opened the browser with the search URL.")
 
     try:
         accept_cookies_button = WebDriverWait(wd, 1).until(
@@ -104,7 +110,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             # Use the id to locate the button
         )
         accept_cookies_button.click()
-    except Exception as e:
+        print("Clicked on the cookies accept button.")
+    except Exception:
         ...
 
     try:
@@ -113,24 +120,26 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             EC.presence_of_element_located((By.XPATH, config['cookies_accept_button_id_2']))
         )
         accept_cookies_button_2.click()
-    except Exception as e:
+        print("Clicked on the cookies accept button 2.")
+    except Exception:
         ...
 
     image_urls = set()
     main_image_count = 0
 
-    scroll_to_end(wd)
-    scroll_to_end(wd)
-    scroll_to_end(wd)
+    for i in range(5):
+        scroll_to_end(wd)
     scroll_to_top(wd)
-    end_index = result_start_index + max_links_to_fetch
+    print("Scrolled down and up.")
+
     while main_image_count < max_links_to_fetch:
 
-        thumbnail_results = wd.find_elements(By.XPATH, config['thumdnail_class_xpath_selector'])
+        print("Looking for images in the main page...")
+        thumbnail_results = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
         thumbnail_results = thumbnail_results[result_start_index:]
         number_results = len(thumbnail_results)
 
-        print(f"There are {number_results} search results in the main page.")
+        print(f"## Found {number_results} search results in the main page.")
 
         counter = 1
 
@@ -140,12 +149,14 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 wd.execute_script("arguments[0].scrollIntoView();", img)
                 ActionChains(wd).move_to_element(img).perform()
                 img.click()
+                print(f"Clicked on thumbnail {counter}.")
                 time.sleep(sleep_between_interactions)
 
                 counter += 1
 
-            except Exception as e:
-                print(f"Error clicking on image.")
+            except Exception:
+                print(f"Error clicking on thumbnail {counter}.")
+                print(f"Moving to thumbnail {counter + 1}.")
                 counter += 1
                 continue
 
@@ -155,9 +166,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     EC.presence_of_element_located((By.CSS_SELECTOR, config['full_image_class_css_selector'])))
 
                 img_url = actual_image.get_attribute("src")
-
             except Exception as e:
-                print(f"{counter}. Error finding full image: {e}")
+                print(f"{counter}. Error finding full image.")
                 counter += 1
                 # continue
             source_page_url = ""
@@ -182,25 +192,24 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             main_image_count = len(image_urls)
 
             print("**************************")
-            print(f"Main image count: {main_image_count}, max_links_to_fetch: {max_links_to_fetch}")
+            print(
+                f"Main images progress: {main_image_count}/{max_links_to_fetch} --- {(main_image_count / max_links_to_fetch) * 100}%")
             print("**************************")
-            # if len(image_urls) >= max_links_to_fetch:
-            #     print(f"found: {len(image_urls)} image links")
-            #     print("**************************")
-            #
-            #     os.startfile(target_folder)
-            #     break
 
             # **************************************************************************
             if config['need_to_check_secondary_images']:
-                ActionChains(wd).key_down(Keys.CONTROL).click(img).key_up(Keys.CONTROL).perform()
-                time.sleep(sleep_between_interactions)
-                windows_handles = wd.window_handles
-                wd.switch_to.window(windows_handles[-1])
-                current_url_safe_search_off = wd.current_url + "&safe=off"
-                wd.get(current_url_safe_search_off)
-                print(f"Current secondary URL: {wd.current_url}")
-
+                try:
+                    ActionChains(wd).key_down(Keys.CONTROL).click(img).key_up(Keys.CONTROL).perform()
+                    time.sleep(sleep_between_interactions)
+                    windows_handles = wd.window_handles
+                    wd.switch_to.window(windows_handles[-1])
+                    current_url_safe_search_off = wd.current_url + "&safe=off"
+                    wd.get(current_url_safe_search_off)
+                    print(f"Current secondary URL: {wd.current_url}")
+                except Exception:
+                    print(f"Error opening the secondary image page.")
+                    print("Moving to the next thumbnail in the main page")
+                    continue
                 try:
                     second_button = WebDriverWait(wd, 2).until(
                         EC.presence_of_element_located((By.XPATH, config['secondary_image_button'])))
@@ -208,15 +217,16 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     second_button_url = second_button.get_attribute("href")
 
                     wd.get(second_button_url)
-                    scroll_to_end(wd)
+                    for i in range(2):
+                        scroll_to_end(wd)
                     scroll_to_top(wd)
 
                     secondary_image_counter = 0
                     while secondary_image_counter < max_secondary_images:
-                        thumbnail_results2 = wd.find_elements(By.XPATH, config['thumdnail_class_xpath_selector'])
+                        thumbnail_results2 = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
                         thumbnail_results2 = thumbnail_results2[result_start_index:]
                         number_results2 = len(thumbnail_results2)
-                        print(f"Found {number_results2} search results in the new page.")
+                        print(f"## Found {number_results2} search results in the secondary page.")
 
                         for img2 in thumbnail_results2:
                             try:
@@ -225,11 +235,11 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 ActionChains(wd).move_to_element(img2).perform()
                                 img2.click()
                                 time.sleep(sleep_between_interactions)
-                                counter += 1
+
 
                             except Exception as e:
-                                print(f"Error clicking on secondary image{img2}.")
-                                counter += 1
+                                print(f"Error clicking on secondary image.")
+
                                 continue
 
                             try:
@@ -238,10 +248,13 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                         (By.CSS_SELECTOR, config['full_image_class_css_selector'])))
 
                                 img_url2 = actual_image2.get_attribute("src")
+                                print(f"Found image: {img_url2}")
 
                             except Exception as e:
                                 print(f"Error finding full secondary image.")
-                                counter += 1
+                                print(f"Moving to the next secondary image.")
+                                print("**************************")
+
                                 continue
 
                             source_page_url2 = ""
@@ -251,9 +264,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 )
                                 source_page_url2 = source_page.get_attribute("href")
                                 print(f"Source page URL: {source_page_url2}")
-                            except Exception as e:
+                            except Exception:
                                 print(f"Error finding source page.")
-                            print(f"Found image: {img_url}")
 
                             if img_url2:
                                 download = persist_image(target_folder, img_url2, source_page_url2)
@@ -264,9 +276,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                             main_image_count = len(image_urls)
 
                             print("**************************")
-                            print(f"Main image count: {main_image_count}\n"
-                                  f"Seconday image count: {secondary_image_counter}\n"
-                                  f"Max main images: {max_links_to_fetch}")
+                            print(
+                                f"Main images progress: {main_image_count}/{max_links_to_fetch} --- {(main_image_count / max_links_to_fetch) * 100}%")
+                            print(
+                                f"Secondary images progress: {secondary_image_counter}/{max_secondary_images} --- {(secondary_image_counter / max_secondary_images) * 100}%")
                             print("**************************")
 
                             if secondary_image_counter == max_secondary_images:
@@ -285,11 +298,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         need_to_open_folder_after_finishing(target_folder)
                         os._exit(0)
                         break
-                except Exception as e:
+                except Exception:
                     print(f"Error finding second button.")
                     wd.close()
                     wd.switch_to.window(windows_handles[0])
-                    counter += 1
                     continue
             else:
                 print("Not checking secondary images")
@@ -315,7 +327,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
 
 def persist_image(folder_path, url, page_source_url):
-    print(f"URL: {url}")
+    image_content = ""
     try:
         image_content = requests.get(url, timeout=5).content
     except requests.exceptions.Timeout:
@@ -333,12 +345,7 @@ def persist_image(folder_path, url, page_source_url):
         if url.endswith(".svg"):
             with WandImage(blob=image_content) as img:
                 png_image = img.make_blob("png")
-                image_file = io.BytesIO(png_image)
                 image_extension = 'svg'
-                image = Image.open(image_file).convert('RGB')
-        else:
-            image_file = io.BytesIO(image_content)
-            image = Image.open(image_file).convert('RGB')
 
         file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + "." + image_extension)
 
@@ -348,19 +355,18 @@ def persist_image(folder_path, url, page_source_url):
 
         with open(file_path, "wb") as f:
             f.write(image_content)
-        print(f"Success - saved {url} - as {file_path}")
+        print(f"Success - saved as {file_path}")
 
         with open(os.path.join(folder_path, "image_info.txt"), "a") as f:
             f.write(f"{os.path.basename(file_path)}: {page_source_url}\n")
         return True
     except Exception as e:
-        print(f"Error - could not save {url} - {e}")
+        print(f"Error - could not save the image - {e}")
         return False
 
 
 def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images,
-                        headless,
-                        target_path="./images"):
+                        headless, target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
     if not os.path.exists(target_folder):
@@ -378,9 +384,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
-                         headless,
-                         wd=wd,
-                         sleep_between_interactions=1)
+                         wd=wd, sleep_between_interactions=1)
 
     # for elem in res:
     #     persist_image(target_folder, elem)
