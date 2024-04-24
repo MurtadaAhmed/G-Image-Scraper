@@ -81,8 +81,7 @@ def get_config():
 config = get_config()
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
-                     wd, sleep_between_interactions):
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder, wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(sleep_between_interactions)
@@ -228,6 +227,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         number_results2 = len(thumbnail_results2)
                         print(f"## Found {number_results2} search results in the secondary page.")
 
+                        no_available_secondary_images = False
                         for img2 in thumbnail_results2:
                             try:
                                 time.sleep(sleep_between_interactions)
@@ -286,9 +286,14 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 print(f"Already downloaded {max_secondary_images} secondary images.")
                                 print("Returning to the main page")
                                 break
-                        else:
 
-                            print(f"Found {len(image_urls)} image links, looking for more...")
+
+                        else:
+                            print(f"No available thumbnails in the secondary page!")
+                            no_available_secondary_images = True
+
+                        if no_available_secondary_images:
+                            break
 
                     wd.close()
                     wd.switch_to.window(windows_handles[0])
@@ -318,7 +323,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
         else:
 
-            print(f"Found {len(image_urls)} image links, looking for more...")
+            print(f"No available thumbnails in the main page!")
+            input("Press any key to exit...")
+            os._exit(0)
+            break
 
         # scroll_to_end(wd)
     print("**************************")
