@@ -107,9 +107,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     wd.get(search_url.format(q=query))
     print("Opened the browser with the search URL.")
+    time.sleep(sleep_between_interactions)
 
     try:
-        accept_cookies_button = WebDriverWait(wd, 1).until(
+        accept_cookies_button = WebDriverWait(wd, 10).until(
             EC.presence_of_element_located((By.ID, config['cookies_accept_button_id']))
             # Use the id to locate the button
         )
@@ -120,7 +121,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     try:
         scroll_to_end(wd)
-        accept_cookies_button_2 = WebDriverWait(wd, 1).until(
+        accept_cookies_button_2 = WebDriverWait(wd, 10).until(
             EC.presence_of_element_located((By.XPATH, config['cookies_accept_button_id_2']))
         )
         accept_cookies_button_2.click()
@@ -144,6 +145,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         number_results = len(thumbnail_results)
 
         print(f"## Found {number_results} search results in the main page.")
+        time.sleep(sleep_between_interactions)
 
         counter = 1
 
@@ -168,7 +170,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
             img_url = ""
             try:
-                actual_image = WebDriverWait(wd, 5).until(
+                actual_image = WebDriverWait(wd, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, config['full_image_class_css_selector'])))
 
                 img_url = actual_image.get_attribute("src")
@@ -176,7 +178,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"{counter}. Error finding full image.")
                 print("Trying to find the image using second selector.")
                 try:
-                    actual_image = WebDriverWait(wd, 5).until(
+                    actual_image = WebDriverWait(wd, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, config['full_image_class_css_selector2'])))
 
                     img_url = actual_image.get_attribute("src")
@@ -186,7 +188,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 # continue
             source_page_url = ""
             try:
-                source_page = WebDriverWait(wd, 2).until(
+                source_page = WebDriverWait(wd, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, config['image_source_page']))
                 )
                 source_page_url = source_page.get_attribute("href")
@@ -219,6 +221,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     time.sleep(sleep_between_interactions)
                     windows_handles = wd.window_handles
                     wd.switch_to.window(windows_handles[-1])
+                    time.sleep(sleep_between_interactions)
                     current_url_safe_search_off = wd.current_url + "&safe=off"
                     wd.get(current_url_safe_search_off)
                     print(f"Current secondary URL: {wd.current_url}")
@@ -227,12 +230,13 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     print("Moving to the next thumbnail in the main page")
                     continue
                 try:
-                    second_button = WebDriverWait(wd, 2).until(
+                    second_button = WebDriverWait(wd, 10).until(
                         EC.presence_of_element_located((By.XPATH, config['secondary_image_button'])))
 
                     second_button_url = second_button.get_attribute("href")
 
                     wd.get(second_button_url)
+                    time.sleep(sleep_between_interactions)
                     for i in range(2):
                         scroll_to_end(wd)
                     scroll_to_top(wd)
@@ -262,7 +266,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 continue
 
                             try:
-                                actual_image2 = WebDriverWait(wd, 2).until(
+                                actual_image2 = WebDriverWait(wd, 10).until(
                                     EC.presence_of_element_located(
                                         (By.CSS_SELECTOR, config['full_image_class_css_selector'])))
 
@@ -273,7 +277,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 print(f"Error finding full secondary image.")
                                 print("Trying to find the image using second selector.")
                                 try:
-                                    actual_image2 = WebDriverWait(wd, 5).until(
+                                    actual_image2 = WebDriverWait(wd, 10).until(
                                         EC.presence_of_element_located(
                                             (By.CSS_SELECTOR, config['full_image_class_css_selector2'])))
 
@@ -284,7 +288,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
                             source_page_url2 = ""
                             try:
-                                source_page = WebDriverWait(wd, 2).until(
+                                source_page = WebDriverWait(wd, 10).until(
                                     EC.presence_of_element_located((By.CSS_SELECTOR, config['image_source_page2']))
                                 )
                                 source_page_url2 = source_page.get_attribute("href")
@@ -417,7 +421,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
-                         wd=wd, sleep_between_interactions=0.1)
+                         wd=wd, sleep_between_interactions=1)
 
     # for elem in res:
     #     persist_image(target_folder, elem)
