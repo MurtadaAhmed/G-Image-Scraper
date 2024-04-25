@@ -89,11 +89,11 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(sleep_between_interactions)
+        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
     def scroll_to_top(wd):
         wd.execute_script("window.scrollTo(0, 0);")
-        time.sleep(sleep_between_interactions)
+        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
     if size_filter == "l":
         size_filter = '&tbs=isz:l'
@@ -107,7 +107,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     wd.get(search_url.format(q=query))
     print("Opened the browser with the search URL.")
-    time.sleep(sleep_between_interactions)
+    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
     try:
         accept_cookies_button = WebDriverWait(wd, 10).until(
@@ -134,31 +134,33 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     for i in range(5):
         scroll_to_end(wd)
+        time.sleep(sleep_between_interactions)
     scroll_to_top(wd)
     print("Scrolled down and up.")
 
     while main_image_count < max_links_to_fetch:
 
         print("Looking for images in the main page...")
+        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
         thumbnail_results = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
         thumbnail_results = thumbnail_results[result_start_index:]
         number_results = len(thumbnail_results)
 
         print(f"## Found {number_results} search results in the main page.")
-        time.sleep(sleep_between_interactions)
+        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
         counter = 1
 
         for img in thumbnail_results:
             try:
-                time.sleep(sleep_between_interactions)
+                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 wd.execute_script("arguments[0].scrollIntoView();", img)
-                time.sleep(sleep_between_interactions)
+                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 ActionChains(wd).move_to_element(img).perform()
-                time.sleep(sleep_between_interactions)
+                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 img.click()
                 print(f"Clicked on thumbnail {counter}.")
-                time.sleep(sleep_between_interactions)
+                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
                 counter += 1
 
@@ -216,12 +218,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             # **************************************************************************
             if config['need_to_check_secondary_images']:
                 try:
-                    time.sleep(sleep_between_interactions)
+                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     ActionChains(wd).key_down(Keys.CONTROL).click(img).key_up(Keys.CONTROL).perform()
-                    time.sleep(sleep_between_interactions)
+                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     windows_handles = wd.window_handles
                     wd.switch_to.window(windows_handles[-1])
-                    time.sleep(sleep_between_interactions)
+                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     current_url_safe_search_off = wd.current_url + "&safe=off"
                     wd.get(current_url_safe_search_off)
                     print(f"Current secondary URL: {wd.current_url}")
@@ -236,13 +238,19 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     second_button_url = second_button.get_attribute("href")
 
                     wd.get(second_button_url)
-                    time.sleep(sleep_between_interactions)
+                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     for i in range(2):
                         scroll_to_end(wd)
+                        time.sleep(sleep_between_interactions)
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     scroll_to_top(wd)
-
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     secondary_image_counter = 0
                     while secondary_image_counter < max_secondary_images:
+                        WebDriverWait(wd, 10).until(
+                            lambda driver: driver.execute_script('return document.readyState') == 'complete')
                         thumbnail_results2 = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
                         thumbnail_results2 = thumbnail_results2[result_start_index:]
                         number_results2 = len(thumbnail_results2)
@@ -251,13 +259,13 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         no_available_secondary_images = False
                         for img2 in thumbnail_results2:
                             try:
-                                time.sleep(sleep_between_interactions)
+                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                                 wd.execute_script("arguments[0].scrollIntoView();", img2)
-                                time.sleep(sleep_between_interactions)
+                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                                 ActionChains(wd).move_to_element(img2).perform()
-                                time.sleep(sleep_between_interactions)
+                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                                 img2.click()
-                                time.sleep(sleep_between_interactions)
+                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
 
                             except Exception as e:
