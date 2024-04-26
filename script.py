@@ -100,7 +100,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     wd.get(search_url.format(q=query))
     print("Opened the browser with the search URL.")
-    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
 
     try:
         accept_cookies_button = WebDriverWait(wd, 10).until(
@@ -480,7 +480,7 @@ def main_inputs():
 
     result_start = input("Enter the start number for the images (default 0): ")
     if not result_start:
-        result_start = 0
+        result_start = "0"
     while not result_start.isdigit():
         result_start = input("You must enter a 'number' for the start number for the images: ")
 
