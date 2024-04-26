@@ -78,7 +78,7 @@ def get_config():
 config = get_config()
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder, interact_manually, headless,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -122,6 +122,9 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     except Exception:
         ...
 
+    if not headless and interact_manually:
+        input("PRESS ANY KEY WHEN YOU ARE READY!")
+
     image_urls = set()
     main_image_count = 0
 
@@ -130,6 +133,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         time.sleep(sleep_between_interactions)
     scroll_to_top(wd)
     print("Scrolled down and up.")
+
+
 
     while main_image_count < max_links_to_fetch:
 
@@ -437,7 +442,7 @@ def persist_image(folder_path, url, page_source_url, image_url_second_selector=F
         return False
 
 
-def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images,
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images, interact_manually,
                         headless, target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
@@ -455,7 +460,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
 
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
+        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,interact_manually, headless,
                          wd=wd, sleep_between_interactions=1)
 
     # for elem in res:
@@ -489,15 +494,27 @@ def main_inputs():
     if int(max_secondary_images) > 0:
         config['need_to_check_secondary_images'] = True
 
-    with_browser = input("Do you want to search with the browser? (y/n): ")
-    while with_browser not in ["y", "n"]:
-        with_browser = input("You must enter 'y' or 'n': ")
-    if with_browser == "n":
+    search_with_browser = input("Do you want to search with the browser? (y/n): ")
+    while search_with_browser not in ["y", "n"]:
+        search_with_browser = input("You must enter 'y' or 'n': ")
+
+    want_manual_interaction = False
+    if search_with_browser == "y":
+        want_manual_interaction = input("Do you want to manually interact with the browser? (y/n): ")
+        while want_manual_interaction not in ["y", "n"]:
+            want_manual_interaction = input("You must enter 'y' or 'n': ")
+        if want_manual_interaction == "y":
+            want_manual_interaction = True
+        else:
+            want_manual_interaction = False
+
+
+    if search_with_browser == "n":
         search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                            image_size, int(max_secondary_images), headless=True)
+                            image_size, int(max_secondary_images),want_manual_interaction, headless=True)
 
     search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                        image_size, int(max_secondary_images), headless=False)
+                        image_size, int(max_secondary_images),want_manual_interaction, headless=False)
 
 
 def need_to_open_folder_after_finishing(target_folder):
