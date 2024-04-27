@@ -1,70 +1,9 @@
-                        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
 <br/>
 <div align="center">
 
 <h3 align="center"> G-Image-Scraper</h3>
 <p align="center">
 A scraper for Google images. It searches the images and download them based on some predefined criteria by the user. 
-
-
-  
-
-
 </p>
 </div>
 
