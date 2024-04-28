@@ -2,7 +2,7 @@ import os
 import sys
 from tkinter import *
 from tkinter.ttk import *
-from script import search_and_download, geckodriver_path
+from script import search_and_download, geckodriver_path , check_imagemagick_dependency
 import threading
 
 window = Tk()
@@ -151,8 +151,12 @@ frm_progress_info.pack(padx=10, pady=5)
 lbl_progress_info = Label(master=frm_progress_info, text="Progress Information:")
 lbl_progress_info.pack(padx=2, anchor=W)
 
-txt_progress_info = Text(master=frm_progress_info, width=60, height=10)
+txt_progress_info = Text(master=frm_progress_info, width=90, height=20)
 txt_progress_info.pack(padx=2, pady=2)
 sys.stdout = TextRedirector(txt_progress_info)
 
+print("********************************************")
+print("********** G-Image-Scraper *********")
+print("********************************************")
+check_imagemagick_dependency()
 window.mainloop()
