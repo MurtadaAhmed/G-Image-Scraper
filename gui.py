@@ -25,10 +25,11 @@ def start_seach():
     show_browser = show_browser_var.get()
     interact_manually = interact_manually_var.get()
     show_folder = show_folder_var.get()
+    maintain_same_size_secondary = maintain_same_size_for_secondary_var.get()
 
     def search_and_open_folder():
         target_folder = search_and_download(search_keyword, geckodriver_path, main_images, start_index, image_size,
-                                            secondary_images, interact_manually, headless=show_browser)
+                                            secondary_images, interact_manually,maintain_same_size_secondary,  headless=show_browser)
 
         messagebox.showinfo("Information", "Finished the search")
         if show_folder:
@@ -129,6 +130,10 @@ chk_interact_manually = Checkbutton(master=frm_size_browser_interact, text="Inte
                                     variable=interact_manually_var, onvalue=True, offvalue=False)
 chk_interact_manually.pack(side=LEFT, padx=2)
 
+maintain_same_size_for_secondary_var = BooleanVar(value=False)
+chk_maintain_same_size_for_secondary = Checkbutton(master=frm_size_browser_interact, text="Maintain same size for secondary",
+                                                   variable=maintain_same_size_for_secondary_var, onvalue=True, offvalue=False)
+chk_maintain_same_size_for_secondary.pack(side=LEFT, padx=2)
 
 def interact_manually_visible_when_browser_ticked(*args):
     if show_browser_var.get() == False:

@@ -20,7 +20,6 @@ from tkinter import messagebox
 import pausing_stopping_variables
 
 
-
 def check_imagemagick_dependency():
     def is_imagemagick_installed():
         try:
@@ -60,7 +59,7 @@ def get_config():
         'full_image_class_css_selector2': 'img.sFlh5c.pT0Scc',
         'firefox_path': r'C:\Program Files\Mozilla Firefox\firefox.exe',
         'supported_image_extensions': ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX',
-                                       'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WebP', 'XBM', 'SVG'],
+                                       'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WEBP', 'XBM', 'SVG'],
         'need_to_check_secondary_images': False,
         'secondary_image_button': "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
                                   "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a",
@@ -75,7 +74,7 @@ config = get_config()
 
 
 def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
-                     interact_manually, headless,
+                     interact_manually, maintain_same_size_secondary, headless,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -98,6 +97,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     wd.get(search_url.format(q=query))
     print("Opened the browser with the search URL.")
 
+    first_cookies_attempt_unsuccessful = False
     try:
         accept_cookies_button = WebDriverWait(wd, 10).until(
             EC.presence_of_element_located((By.ID, config['cookies_accept_button_id']))
@@ -106,17 +106,19 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         accept_cookies_button.click()
         print("Clicked on the cookies accept button.")
     except Exception:
+        first_cookies_attempt_unsuccessful = True
         ...
 
-    try:
-        scroll_to_end(wd)
-        accept_cookies_button_2 = WebDriverWait(wd, 10).until(
-            EC.presence_of_element_located((By.XPATH, config['cookies_accept_button_id_2']))
-        )
-        accept_cookies_button_2.click()
-        print("Clicked on the cookies accept button 2.")
-    except Exception:
-        ...
+    if first_cookies_attempt_unsuccessful:
+        try:
+            scroll_to_end(wd)
+            accept_cookies_button_2 = WebDriverWait(wd, 10).until(
+                EC.presence_of_element_located((By.XPATH, config['cookies_accept_button_id_2']))
+            )
+            accept_cookies_button_2.click()
+            print("Clicked on the cookies accept button 2.")
+        except Exception:
+            ...
 
     # if not headless and interact_manually:
     #     input("PRESS ANY KEY WHEN YOU ARE READY!")
@@ -264,7 +266,10 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
                     second_button_url = second_button.get_attribute("href")
 
-                    wd.get(second_button_url)
+                    if maintain_same_size_secondary:
+                        wd.get(second_button_url + size_filter)
+                    else:
+                        wd.get(second_button_url)
                     WebDriverWait(wd, 10).until(
                         lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     for i in range(2):
@@ -418,7 +423,6 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
         # scroll_to_end(wd)
 
-
     return image_urls
 
 
@@ -473,7 +477,7 @@ def persist_image(folder_path, url, page_source_url, image_url_second_selector=F
 
 
 def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images,
-                        interact_manually,
+                        interact_manually, maintain_same_size_secondary,
                         headless, target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
@@ -494,13 +498,10 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
-                         interact_manually, headless,
+                         interact_manually, maintain_same_size_secondary, headless,
                          wd=wd, sleep_between_interactions=1)
 
     return target_folder
-
-
-
 
 # for elem in res:
 #     persist_image(target_folder, elem)
