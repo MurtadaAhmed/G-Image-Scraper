@@ -2,9 +2,10 @@ import os
 import sys
 from tkinter import *
 from tkinter.ttk import *
-from script import search_and_download, geckodriver_path , check_imagemagick_dependency
+from script import search_and_download, geckodriver_path, check_imagemagick_dependency
 import threading
 from tkinter import messagebox
+import pausing_stopping_variables
 
 window = Tk()
 window.title("G-Image-Scraper")
@@ -32,6 +33,9 @@ def start_seach():
         messagebox.showinfo("Information", "Finished the search")
         if show_folder:
             os.startfile(target_folder)
+        pausing_stopping_variables.is_stopped = False
+        pausing_stopping_variables.is_paused = False
+        btn_pause['text'] = "Pause"
 
     if search_keyword and main_images >= 1:
         thread = threading.Thread(target=search_and_open_folder)
@@ -48,6 +52,19 @@ class TextRedirector(object):
 
     def flush(self):
         pass
+
+
+def stopping():
+    pausing_stopping_variables.is_stopped = True
+
+
+def toggle_pause_resume():
+    if btn_pause['text'] == "Pause":
+        btn_pause['text'] = "Resume"
+        pausing_stopping_variables.is_paused = True
+    else: # if btn_pause['text'] = "Resume"
+        btn_pause['text'] = "Pause"
+        pausing_stopping_variables.is_paused = False
 
 
 # ********** Search Keyword **********
@@ -140,11 +157,12 @@ frm_buttons.pack(padx=10, pady=5)
 btn_start = Button(master=frm_buttons, text="Start Search", width=14, command=start_seach)
 btn_start.pack(padx=10, side=LEFT)
 
-# btn_pause = Button(master=frm_buttons, text="Pause", width=10)
-# btn_pause.pack(padx=10, side=LEFT)
-#
-# btn_stop = Button(master=frm_buttons, text="Stop", width=10)
-# btn_stop.pack(padx=10, side=LEFT)
+btn_pause = Button(master=frm_buttons, text="Pause", width=10, command=toggle_pause_resume)
+btn_pause.pack(padx=10, side=LEFT)
+
+btn_stop = Button(master=frm_buttons, text="Stop", width=10, command=stopping)
+btn_stop.pack(padx=10, side=LEFT)
+
 
 # ********** Progress information **********
 

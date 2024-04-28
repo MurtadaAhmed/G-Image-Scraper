@@ -17,7 +17,7 @@ from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 import subprocess
 from tkinter import messagebox
-
+import pausing_stopping_variables
 
 
 
@@ -136,6 +136,9 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     while main_image_count < max_links_to_fetch:
 
+        if pausing_stopping_variables.is_stopped:
+            break
+
         print("Looking for images in the main page...")
         WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
         thumbnail_results = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
@@ -148,6 +151,14 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         counter = 1
 
         for img in thumbnail_results:
+
+            while pausing_stopping_variables.is_paused:
+                if pausing_stopping_variables.is_stopped:
+                    break
+                time.sleep(1)
+            if pausing_stopping_variables.is_stopped:
+                break
+
             try:
 
                 WebDriverWait(wd, 10).until(
@@ -222,6 +233,12 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
             # **************************************************************************
             if config['need_to_check_secondary_images']:
+                while pausing_stopping_variables.is_paused:
+                    if pausing_stopping_variables.is_stopped:
+                        break
+                    time.sleep(1)
+                if pausing_stopping_variables.is_stopped:
+                    break
                 try:
 
                     WebDriverWait(wd, 10).until(
@@ -260,6 +277,13 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     #     lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     secondary_image_counter = 0
                     while secondary_image_counter < max_secondary_images:
+                        while pausing_stopping_variables.is_paused:
+                            if pausing_stopping_variables.is_stopped:
+                                break
+                            time.sleep(1)
+                        if pausing_stopping_variables.is_stopped:
+                            break
+
                         WebDriverWait(wd, 10).until(
                             lambda driver: driver.execute_script('return document.readyState') == 'complete')
                         thumbnail_results2 = wd.find_elements(By.XPATH, config['thumbnail_class_xpath_selector'])
@@ -269,6 +293,14 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
                         no_available_secondary_images = False
                         for img2 in thumbnail_results2:
+
+                            while pausing_stopping_variables.is_paused:
+                                if pausing_stopping_variables.is_stopped:
+                                    break
+                                time.sleep(1)
+                            if pausing_stopping_variables.is_stopped:
+                                break
+
                             try:
 
                                 WebDriverWait(wd, 10).until(
