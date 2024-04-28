@@ -137,14 +137,14 @@ chk_show_folder.pack(side=LEFT, padx=2)
 frm_buttons = Frame(master=window)
 frm_buttons.pack(padx=10, pady=5)
 
-btn_start = Button(master=frm_buttons, text="Start", width=10, command=start_seach)
+btn_start = Button(master=frm_buttons, text="Start Search", width=14, command=start_seach)
 btn_start.pack(padx=10, side=LEFT)
 
-btn_pause = Button(master=frm_buttons, text="Pause", width=10)
-btn_pause.pack(padx=10, side=LEFT)
-
-btn_stop = Button(master=frm_buttons, text="Stop", width=10)
-btn_stop.pack(padx=10, side=LEFT)
+# btn_pause = Button(master=frm_buttons, text="Pause", width=10)
+# btn_pause.pack(padx=10, side=LEFT)
+#
+# btn_stop = Button(master=frm_buttons, text="Stop", width=10)
+# btn_stop.pack(padx=10, side=LEFT)
 
 # ********** Progress information **********
 
