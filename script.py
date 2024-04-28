@@ -121,6 +121,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     # if not headless and interact_manually:
     #     input("PRESS ANY KEY WHEN YOU ARE READY!")
 
+    scroll_to_top(wd)
     if not headless and interact_manually:
         messagebox.showinfo("Information", "Press OK when you are done with the browser interaction")
 
@@ -368,8 +369,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             # **************************************************************************
 
             if len(image_urls) >= max_links_to_fetch:
-                print(f"found: {len(image_urls)} image links")
-                print("**************************")
+                # print(f"found: {len(image_urls)} image links")
+
                 wd.quit()
                 # need_to_open_folder_after_finishing(target_folder)
                 # os._exit(0)
@@ -384,7 +385,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             break
 
         # scroll_to_end(wd)
-    print("**************************")
+
 
     return image_urls
 

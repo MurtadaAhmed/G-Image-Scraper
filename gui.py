@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter.ttk import *
 from script import search_and_download, geckodriver_path , check_imagemagick_dependency
 import threading
+from tkinter import messagebox
 
 window = Tk()
 window.title("G-Image-Scraper")
@@ -27,6 +28,8 @@ def start_seach():
     def search_and_open_folder():
         target_folder = search_and_download(search_keyword, geckodriver_path, main_images, start_index, image_size,
                                             secondary_images, interact_manually, headless=show_browser)
+
+        messagebox.showinfo("Information", "Finished the search")
         if show_folder:
             os.startfile(target_folder)
 
