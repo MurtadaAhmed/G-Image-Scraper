@@ -42,11 +42,6 @@ class ImageScraperApp(Tk):
         self.size_entry = Entry(self, textvariable=self.size)
         self.size_entry.pack()
 
-        self.search_button = Button(self, text="Search", command=self.search_images)
-        self.search_button.pack()
-
-        self.output_text = Text(self)
-        self.output_text.pack()
         self.secondary_label = Label(self, text="Secondary images")
         self.secondary_label.pack()
         self.secondary = StringVar()
