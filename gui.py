@@ -78,16 +78,38 @@ frm_show_folder.pack(padx=10, pady=5)
 show_folder_var = IntVar(value=0)
 chk_show_folder = Checkbutton(master=frm_show_folder, text="Show folder with the downloaded images", variable=show_folder_var, onvalue=1, offvalue=0)
 chk_show_folder.pack(side=LEFT, padx=2)
+
+
+# ********** Start button **********
+frm_buttons = Frame(master=window)
+frm_buttons.pack(padx=10, pady=5)
+
+btn_start = Button(master=frm_buttons, text="Start", width=10)
+btn_start.pack(padx=10, side=LEFT)
+
+btn_pause = Button(master=frm_buttons, text="Pause", width=10)
+btn_pause.pack(padx=10, side=LEFT)
+
+btn_stop = Button(master=frm_buttons, text="Stop", width=10)
+btn_stop.pack(padx=10,  side=LEFT)
+
+
+
+
+
+
 # ********** Progress information **********
 
 frm_progress_info = Frame(master=window)
 frm_progress_info.pack(padx=10, pady=5)
 
 lbl_progress_info = Label(master=frm_progress_info, text="Progress Information:")
-lbl_progress_info.pack(padx=2 )
+lbl_progress_info.pack(padx=2, anchor=W)
 
 txt_progress_info = Text(master=frm_progress_info, width=60, height=10)
 txt_progress_info.pack(padx=2,pady=2)
+
+
 
 
 window.mainloop()
