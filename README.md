@@ -4,8 +4,16 @@ A scraper for Google images. It searches the images and download them based on s
 </div>
 
  ## About The Project
+GUI:
+
+![image](https://github.com/MurtadaAhmed/G-Image-Scraper/assets/108568451/15acd42c-2d58-4466-b8d1-07bf93bc9fbd)
+
+
+CLI:
 
 ![Product Screenshot](https://i.imgur.com/LrW5K0E.png)
+
+
 
 G-Image-Scraper is a scraper for Google images based on Python and Selenium. It searches the images and download them based on some predefined criteria by the user. The script is developed to work mainly for Windows OS users.
  ### Built With
@@ -33,14 +41,19 @@ can be installed from requirements.txt:
 ```
 git clone https://github.com/MurtadaAhmed/G-Image-Scraper
 ```
-2. Install dependencies:
+
+2. For GUI version, access it in this folder:
+G-Image-Scraper\dist\gui.exe
+
+3. For CLI continue with the following steps:
+* Install dependencies:
 ``` 
 cd G-Image-Scraper
 ```
 ``` 
 pip install -r requirements.txt 
 ```
-3. Run the app:
+* Run the app:
 
 ``` python .\script.py```
  ## Usage
