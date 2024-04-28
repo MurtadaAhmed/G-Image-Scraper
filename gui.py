@@ -81,13 +81,13 @@ chk_show_folder.pack(side=LEFT, padx=2)
 # ********** Progress information **********
 
 frm_progress_info = Frame(master=window)
-frm_progress_info.pack(padx=10)
+frm_progress_info.pack(padx=10, pady=5)
 
 lbl_progress_info = Label(master=frm_progress_info, text="Progress Information:")
-lbl_progress_info.pack(padx=2, pady=5)
+lbl_progress_info.pack(padx=2 )
 
 txt_progress_info = Text(master=frm_progress_info, width=60, height=10)
-txt_progress_info.pack(padx=2, pady=10)
+txt_progress_info.pack(padx=2,pady=2)
 
 
 window.mainloop()
