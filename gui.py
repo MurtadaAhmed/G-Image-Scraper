@@ -1,15 +1,39 @@
+import os
 from tkinter import *
 from tkinter.ttk import *
+from script import search_and_download, geckodriver_path
 
 window = Tk()
 window.title("G-Image-Scraper")
+
+
 # window.rowconfigure([0, 1, 2, 3, 4, 5], weight=1, minsize=100)
 # window.columnconfigure([0, 1, 2, 3, 4, 5], weight=1, minsize=100)
+
+# ********** Functions **********
+
+def start_seach():
+    search_keyword = search_keyword_var.get()
+    main_images = main_images_var.get()
+    start_index = start_index_var.get()
+    secondary_images = secondary_images_var.get()
+    image_size = image_size_var.get()
+    show_browser = show_browser_var.get()
+    interact_manually = interact_manually_var.get()
+    show_folder = show_folder_var.get()
+
+    if search_keyword and main_images >= 1:
+        target_folder = search_and_download(search_keyword, geckodriver_path, main_images, start_index, image_size,
+                                            secondary_images, interact_manually, headless=show_browser)
+
+        if show_folder:
+            os.startfile(target_folder)
+
+
 # ********** Search Keyword **********
 
 frm_search_keyword = Frame(master=window)
 frm_search_keyword.pack(padx=5, pady=10)
-
 
 lbl_search_keyword = Label(master=frm_search_keyword, text="Search Keyword:")
 lbl_search_keyword.pack(side=LEFT)
@@ -41,7 +65,8 @@ lbl_secondary_images = Label(master=frm_image_number_index, text="Secondary Imag
 lbl_secondary_images.pack(side=LEFT, padx=2)
 
 secondary_images_var = IntVar(value=0)
-spin_secondary_images = Spinbox(master=frm_image_number_index, from_=1, to=500, width=5, textvariable=secondary_images_var)
+spin_secondary_images = Spinbox(master=frm_image_number_index, from_=1, to=500, width=5,
+                                textvariable=secondary_images_var)
 spin_secondary_images.pack(side=LEFT, padx=2)
 
 # ********** Image size / Show & Interact with browser **********
@@ -53,22 +78,23 @@ lbl_image_size = Label(master=frm_size_browser_interact, text="Image Size:")
 lbl_image_size.pack(side=LEFT, padx=2)
 
 image_size_var = StringVar(value="Default")
-cmb_image_size = Combobox(master=frm_size_browser_interact, values=["Default", "Large", "Medium", "Icon"], width=10, textvariable=image_size_var)
+cmb_image_size = Combobox(master=frm_size_browser_interact, values=["Default", "Large", "Medium", "Icon"], width=10,
+                          textvariable=image_size_var)
 cmb_image_size.pack(side=LEFT, padx=2)
 
-show_browser_var = IntVar(value=0)
+show_browser_var = BooleanVar(value=True)
 chk_show_browser = Checkbutton(master=frm_size_browser_interact, text="Show Browser", variable=show_browser_var,
-                               onvalue=1, offvalue=0)
+                               onvalue=False, offvalue=True)
 chk_show_browser.pack(side=LEFT, padx=2)
 
-interact_manually_var = IntVar(value=0)
+interact_manually_var = BooleanVar(value=False)
 chk_interact_manually = Checkbutton(master=frm_size_browser_interact, text="Interact Manually",
-                                    variable=interact_manually_var, onvalue=1, offvalue=0)
+                                    variable=interact_manually_var, onvalue=True, offvalue=False)
 chk_interact_manually.pack(side=LEFT, padx=2)
 
 
 def interact_manually_visible_when_browser_ticked(*args):
-    if show_browser_var.get() == 1:
+    if show_browser_var.get() == True:
         chk_interact_manually.configure(state=NORMAL)
     else:
         chk_interact_manually.configure(state=DISABLED)
@@ -91,7 +117,7 @@ chk_show_folder.pack(side=LEFT, padx=2)
 frm_buttons = Frame(master=window)
 frm_buttons.pack(padx=10, pady=5)
 
-btn_start = Button(master=frm_buttons, text="Start", width=10)
+btn_start = Button(master=frm_buttons, text="Start", width=10, command=start_seach)
 btn_start.pack(padx=10, side=LEFT)
 
 btn_pause = Button(master=frm_buttons, text="Pause", width=10)

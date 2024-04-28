@@ -88,11 +88,11 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         wd.execute_script("window.scrollTo(0, 0);")
         # WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
-    if size_filter == "l":
+    if size_filter == "Large":
         size_filter = '&tbs=isz:l'
-    elif size_filter == "m":
+    elif size_filter == "Medium":
         size_filter = '&tbs=isz:m'
-    elif size_filter == "i":
+    elif size_filter == "Icon":
         size_filter = '&tbs=isz:i'
 
     search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img" + size_filter
@@ -358,8 +358,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     if len(image_urls) >= max_links_to_fetch:
                         print("Search complete.")
                         wd.quit()
-                        need_to_open_folder_after_finishing(target_folder)
-                        os._exit(0)
+                        # need_to_open_folder_after_finishing(target_folder)
+                        # os._exit(0)
                         break
                 except Exception:
                     print(f"Error finding second button.")
@@ -374,16 +374,16 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 print(f"found: {len(image_urls)} image links")
                 print("**************************")
                 wd.quit()
-                need_to_open_folder_after_finishing(target_folder)
-                os._exit(0)
+                # need_to_open_folder_after_finishing(target_folder)
+                # os._exit(0)
                 break
 
 
         else:
 
             print(f"No available thumbnails in the main page!")
-            input("Press any key to exit...")
-            os._exit(0)
+            # input("Press any key to exit...")
+            # os._exit(0)
             break
 
         # scroll_to_end(wd)
@@ -458,80 +458,84 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
     if headless:
         options.add_argument("-headless")
 
+    if max_secondary_images >= 1:
+        config['need_to_check_secondary_images'] = True
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
         fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,interact_manually, headless,
                          wd=wd, sleep_between_interactions=1)
 
+    return target_folder
+
     # for elem in res:
     #     persist_image(target_folder, elem)
 
 
-def main_inputs():
-    keyword_to_search = input("Enter the keyword to search: ")
-    while not keyword_to_search:
-        keyword_to_search = input("You must enter the keyword to search: ")
-
-    number_of_images_to_download = input("Please tell me how many main photos should I download :): ")
-    while not number_of_images_to_download:
-        number_of_images_to_download = input("Dont play with me, how many main photos should I check?? :( : ")
-    while not number_of_images_to_download.isdigit():
-        number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
-
-    result_start = input("Enter the start number for the images (default 0): ")
-    if not result_start:
-        result_start = "0"
-    while not result_start.isdigit():
-        result_start = input("You must enter a 'number' for the start number for the images: ")
-
-    image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
-    while image_size not in ["l", "m", "i", ""]:
-        image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
-
-    max_secondary_images = input("Enter the number of secondary images per main one: Default is 0: ")
-    while not max_secondary_images.isdigit() or not max_secondary_images:
-        max_secondary_images = input("You must enter a number for maximum secondary images: ")
-    if int(max_secondary_images) > 0:
-        config['need_to_check_secondary_images'] = True
-
-    search_with_browser = input("Do you want to search with the browser? (y/n): ")
-    while search_with_browser not in ["y", "n"]:
-        search_with_browser = input("You must enter 'y' or 'n': ")
-
-    want_manual_interaction = False
-    if search_with_browser == "y":
-        want_manual_interaction = input("Do you want to manually interact with the browser? (y/n): ")
-        while want_manual_interaction not in ["y", "n"]:
-            want_manual_interaction = input("You must enter 'y' or 'n': ")
-        if want_manual_interaction == "y":
-            want_manual_interaction = True
-        else:
-            want_manual_interaction = False
-
-
-    if search_with_browser == "n":
-        search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                            image_size, int(max_secondary_images),want_manual_interaction, headless=True)
-
-    search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                        image_size, int(max_secondary_images),want_manual_interaction, headless=False)
+# def main_inputs():
+#     keyword_to_search = input("Enter the keyword to search: ")
+#     while not keyword_to_search:
+#         keyword_to_search = input("You must enter the keyword to search: ")
+#
+#     number_of_images_to_download = input("Please tell me how many main photos should I download :): ")
+#     while not number_of_images_to_download:
+#         number_of_images_to_download = input("Dont play with me, how many main photos should I check?? :( : ")
+#     while not number_of_images_to_download.isdigit():
+#         number_of_images_to_download = input("You must enter a 'number' for the main images to download: ")
+#
+#     result_start = input("Enter the start number for the images (default 0): ")
+#     if not result_start:
+#         result_start = "0"
+#     while not result_start.isdigit():
+#         result_start = input("You must enter a 'number' for the start number for the images: ")
+#
+#     image_size = input("Enter the image size (l: large, m: medium, i: icon, Enter: default): ")
+#     while image_size not in ["l", "m", "i", ""]:
+#         image_size = input("You must enter a valid image size (l: large, m: medium, i: icon, Enter: default): ")
+#
+#     max_secondary_images = input("Enter the number of secondary images per main one: Default is 0: ")
+#     while not max_secondary_images.isdigit() or not max_secondary_images:
+#         max_secondary_images = input("You must enter a number for maximum secondary images: ")
+#     if int(max_secondary_images) > 0:
+#         config['need_to_check_secondary_images'] = True
+#
+#     search_with_browser = input("Do you want to search with the browser? (y/n): ")
+#     while search_with_browser not in ["y", "n"]:
+#         search_with_browser = input("You must enter 'y' or 'n': ")
+#
+#     want_manual_interaction = False
+#     if search_with_browser == "y":
+#         want_manual_interaction = input("Do you want to manually interact with the browser? (y/n): ")
+#         while want_manual_interaction not in ["y", "n"]:
+#             want_manual_interaction = input("You must enter 'y' or 'n': ")
+#         if want_manual_interaction == "y":
+#             want_manual_interaction = True
+#         else:
+#             want_manual_interaction = False
 
 
-def need_to_open_folder_after_finishing(target_folder):
-    open_folder = input("Do you want me to open the folder with the images? (y/n): ")
-    while open_folder not in ["y", "n"]:
-        open_folder = input("You must enter 'y' or 'n': ")
-    if open_folder == "y":
-        os.startfile(target_folder)
+    # if search_with_browser == "n":
+    #     search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
+    #                         image_size, int(max_secondary_images),want_manual_interaction, headless=True)
+    #
+    # search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
+    #                     image_size, int(max_secondary_images),want_manual_interaction, headless=False)
 
-    another_search = input("Do you want to do another search? (y/n): ")
-    while another_search not in ["y", "n"]:
-        another_search = input("You must enter 'y' or 'n': ")
-    if another_search == "y":
-        main_inputs()
-    else:
-        print("Goodbye")
-        input("Press any key to exit...")
-        os._exit(0)
+
+# def need_to_open_folder_after_finishing(target_folder):
+#     open_folder = input("Do you want me to open the folder with the images? (y/n): ")
+#     while open_folder not in ["y", "n"]:
+#         open_folder = input("You must enter 'y' or 'n': ")
+#     if open_folder == "y":
+#         os.startfile(target_folder)
+#
+#     another_search = input("Do you want to do another search? (y/n): ")
+#     while another_search not in ["y", "n"]:
+#         another_search = input("You must enter 'y' or 'n': ")
+#     if another_search == "y":
+#         main_inputs()
+#     else:
+#         print("Goodbye")
+#         input("Press any key to exit...")
+#         os._exit(0)
 
 
