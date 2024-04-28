@@ -1,7 +1,9 @@
 import os
+import sys
 from tkinter import *
 from tkinter.ttk import *
 from script import search_and_download, geckodriver_path
+import threading
 
 window = Tk()
 window.title("G-Image-Scraper")
@@ -10,7 +12,7 @@ window.title("G-Image-Scraper")
 # window.rowconfigure([0, 1, 2, 3, 4, 5], weight=1, minsize=100)
 # window.columnconfigure([0, 1, 2, 3, 4, 5], weight=1, minsize=100)
 
-# ********** Functions **********
+# ********** Functions & Classes **********
 
 def start_seach():
     search_keyword = search_keyword_var.get()
@@ -22,12 +24,27 @@ def start_seach():
     interact_manually = interact_manually_var.get()
     show_folder = show_folder_var.get()
 
-    if search_keyword and main_images >= 1:
+    def search_and_open_folder():
         target_folder = search_and_download(search_keyword, geckodriver_path, main_images, start_index, image_size,
                                             secondary_images, interact_manually, headless=show_browser)
-
         if show_folder:
             os.startfile(target_folder)
+
+    if search_keyword and main_images >= 1:
+        thread = threading.Thread(target=search_and_open_folder)
+        thread.start()
+
+
+class TextRedirector(object):
+    def __init__(self, widget):
+        self.widget = widget
+
+    def write(self, str):
+        self.widget.insert(END, str)
+        self.widget.see(END)
+
+    def flush(self):
+        pass
 
 
 # ********** Search Keyword **********
@@ -136,5 +153,6 @@ lbl_progress_info.pack(padx=2, anchor=W)
 
 txt_progress_info = Text(master=frm_progress_info, width=60, height=10)
 txt_progress_info.pack(padx=2, pady=2)
+sys.stdout = TextRedirector(txt_progress_info)
 
 window.mainloop()
