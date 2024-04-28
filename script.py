@@ -17,9 +17,6 @@ from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 import subprocess
 
-
-
-
 print("********************************************")
 print("********** G-Image-Scraper *********")
 print("********************************************")
@@ -71,12 +68,8 @@ def get_config():
         'need_to_check_secondary_images': False,
         'secondary_image_button': "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
                                   "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a",
-        'image_source_page': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > "
-                             "div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > "
-                             "div:nth-child(1) > a:nth-child(2)",
-        'image_source_page2': "div.tvh9oe:nth-child(2) > c-wiz:nth-child(2) > div:nth-child(1) > div:nth-child(1) > "
-                              "div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > div:nth-child(1) > "
-                              "div:nth-child(1) > a:nth-child(1)"
+        'image_source_page': "a.Hnk30e.indIKd",
+        'image_source_page2': "a.Hnk30e.indIKd"
 
     }
     return variables
@@ -85,15 +78,15 @@ def get_config():
 config = get_config()
 
 
-def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder,
+def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter, max_secondary_images, target_folder, interact_manually, headless,
                      wd, sleep_between_interactions):
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+        # WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
     def scroll_to_top(wd):
         wd.execute_script("window.scrollTo(0, 0);")
-        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+        # WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
     if size_filter == "l":
         size_filter = '&tbs=isz:l'
@@ -107,7 +100,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
     wd.get(search_url.format(q=query))
     print("Opened the browser with the search URL.")
-    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
 
     try:
         accept_cookies_button = WebDriverWait(wd, 10).until(
@@ -129,6 +122,9 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     except Exception:
         ...
 
+    if not headless and interact_manually:
+        input("PRESS ANY KEY WHEN YOU ARE READY!")
+
     image_urls = set()
     main_image_count = 0
 
@@ -137,6 +133,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         time.sleep(sleep_between_interactions)
     scroll_to_top(wd)
     print("Scrolled down and up.")
+
+
 
     while main_image_count < max_links_to_fetch:
 
@@ -147,20 +145,26 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
         number_results = len(thumbnail_results)
 
         print(f"## Found {number_results} search results in the main page.")
-        WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+        # WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
         counter = 1
 
         for img in thumbnail_results:
             try:
-                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
+                WebDriverWait(wd, 10).until(
+                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 wd.execute_script("arguments[0].scrollIntoView();", img)
-                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                WebDriverWait(wd, 10).until(
+                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 ActionChains(wd).move_to_element(img).perform()
-                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                WebDriverWait(wd, 10).until(
+                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
                 img.click()
                 print(f"Clicked on thumbnail {counter}.")
-                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                WebDriverWait(wd, 10).until(
+                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
                 counter += 1
 
@@ -171,6 +175,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                 continue
 
             img_url = ""
+            img_url_second_selector = False
             try:
                 actual_image = WebDriverWait(wd, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, config['full_image_class_css_selector'])))
@@ -184,6 +189,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         EC.presence_of_element_located((By.CSS_SELECTOR, config['full_image_class_css_selector2'])))
 
                     img_url = actual_image.get_attribute("src")
+                    img_url_second_selector = True
                 except Exception:
                     print(f"{counter}. Error finding full image using second selector as well.")
                 counter += 1
@@ -202,7 +208,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
 
             if img_url:
                 print(f"Found image: {img_url}")
-                download = persist_image(target_folder, img_url, source_page_url)
+                download = persist_image(target_folder, img_url, source_page_url, img_url_second_selector)
 
             if not download and config['need_to_check_secondary_images']:
                 image_urls.add(img_url)
@@ -212,18 +218,24 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             main_image_count = len(image_urls)
 
             print("**************************")
-            print(f"Main images progress: {main_image_count}/{max_links_to_fetch} --- {format((main_image_count / max_links_to_fetch) * 100, '.2f')}%")
+            print(
+                f"Main images progress: {main_image_count}/{max_links_to_fetch} --- {format((main_image_count / max_links_to_fetch) * 100, '.2f')}%")
             print("**************************")
 
             # **************************************************************************
             if config['need_to_check_secondary_images']:
                 try:
-                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     ActionChains(wd).key_down(Keys.CONTROL).click(img).key_up(Keys.CONTROL).perform()
-                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
                     windows_handles = wd.window_handles
                     wd.switch_to.window(windows_handles[-1])
-                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     current_url_safe_search_off = wd.current_url + "&safe=off"
                     wd.get(current_url_safe_search_off)
                     print(f"Current secondary URL: {wd.current_url}")
@@ -238,15 +250,16 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                     second_button_url = second_button.get_attribute("href")
 
                     wd.get(second_button_url)
-                    WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    WebDriverWait(wd, 10).until(
+                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     for i in range(2):
                         scroll_to_end(wd)
                         time.sleep(sleep_between_interactions)
-                    WebDriverWait(wd, 10).until(
-                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    # WebDriverWait(wd, 10).until(
+                    #     lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     scroll_to_top(wd)
-                    WebDriverWait(wd, 10).until(
-                        lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    # WebDriverWait(wd, 10).until(
+                    #     lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     secondary_image_counter = 0
                     while secondary_image_counter < max_secondary_images:
                         WebDriverWait(wd, 10).until(
@@ -259,20 +272,26 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                         no_available_secondary_images = False
                         for img2 in thumbnail_results2:
                             try:
-                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
+                                WebDriverWait(wd, 10).until(
+                                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
                                 wd.execute_script("arguments[0].scrollIntoView();", img2)
-                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                                WebDriverWait(wd, 10).until(
+                                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
                                 ActionChains(wd).move_to_element(img2).perform()
-                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                                WebDriverWait(wd, 10).until(
+                                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
                                 img2.click()
-                                WebDriverWait(wd, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                                WebDriverWait(wd, 10).until(
+                                    lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
 
                             except Exception as e:
                                 print(f"Error clicking on secondary image.")
 
                                 continue
-
+                            img_url_second_selector = False
                             try:
                                 actual_image2 = WebDriverWait(wd, 10).until(
                                     EC.presence_of_element_located(
@@ -290,6 +309,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                             (By.CSS_SELECTOR, config['full_image_class_css_selector2'])))
 
                                     img_url2 = actual_image2.get_attribute("src")
+                                    img_url_second_selector = True
                                 except Exception:
                                     print(f"{counter}. Error finding full image using second selector as well.")
                                     continue
@@ -305,7 +325,8 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
                                 print(f"Error finding source page.")
 
                             if img_url2:
-                                download = persist_image(target_folder, img_url2, source_page_url2)
+                                download = persist_image(target_folder, img_url2, source_page_url2,
+                                                         img_url_second_selector)
 
                             if download:
                                 secondary_image_counter += 1
@@ -371,7 +392,7 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     return image_urls
 
 
-def persist_image(folder_path, url, page_source_url):
+def persist_image(folder_path, url, page_source_url, image_url_second_selector=False):
     image_content = ""
     try:
         image_content = requests.get(url, timeout=5).content
@@ -393,6 +414,17 @@ def persist_image(folder_path, url, page_source_url):
                 image_extension = 'svg'
 
         file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + "." + image_extension)
+        # if image_url_second_selector:
+        #     if not os.path.exists("secondary_images"):
+        #         os.makedirs("secondary_images")
+        #     folder_path = os.path.join(folder_path, "secondary_images")
+        #     file_path = os.path.join(folder_path, hashlib.sha1(image_content).hexdigest()[0:10] + "_2." + image_extension)
+
+        if image_url_second_selector:
+            folder_path = os.path.join(folder_path, "failed")
+            os.makedirs(folder_path, exist_ok=True)
+            file_path = os.path.join(folder_path,
+                                     hashlib.sha1(image_content).hexdigest()[0:10] + "_2." + image_extension)
 
         if os.path.exists(file_path):
             print(f"The file {url} already exists in the folder.")
@@ -410,7 +442,7 @@ def persist_image(folder_path, url, page_source_url):
         return False
 
 
-def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images,
+def search_and_download(search_term, driver_path, number_images, result_start, size_filter, max_secondary_images, interact_manually,
                         headless, target_path="./images"):
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
 
@@ -428,7 +460,7 @@ def search_and_download(search_term, driver_path, number_images, result_start, s
 
     # Create a new instance of the Firefox driver
     with webdriver.Firefox(options=options, service=s) as wd:
-        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,
+        fetch_image_urls(search_term, number_images, result_start, size_filter, max_secondary_images, target_folder,interact_manually, headless,
                          wd=wd, sleep_between_interactions=1)
 
     # for elem in res:
@@ -448,7 +480,7 @@ def main_inputs():
 
     result_start = input("Enter the start number for the images (default 0): ")
     if not result_start:
-        result_start = 0
+        result_start = "0"
     while not result_start.isdigit():
         result_start = input("You must enter a 'number' for the start number for the images: ")
 
@@ -462,15 +494,27 @@ def main_inputs():
     if int(max_secondary_images) > 0:
         config['need_to_check_secondary_images'] = True
 
-    with_browser = input("Do you want to search with the browser? (y/n): ")
-    while with_browser not in ["y", "n"]:
-        with_browser = input("You must enter 'y' or 'n': ")
-    if with_browser == "n":
+    search_with_browser = input("Do you want to search with the browser? (y/n): ")
+    while search_with_browser not in ["y", "n"]:
+        search_with_browser = input("You must enter 'y' or 'n': ")
+
+    want_manual_interaction = False
+    if search_with_browser == "y":
+        want_manual_interaction = input("Do you want to manually interact with the browser? (y/n): ")
+        while want_manual_interaction not in ["y", "n"]:
+            want_manual_interaction = input("You must enter 'y' or 'n': ")
+        if want_manual_interaction == "y":
+            want_manual_interaction = True
+        else:
+            want_manual_interaction = False
+
+
+    if search_with_browser == "n":
         search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                            image_size, int(max_secondary_images), headless=True)
+                            image_size, int(max_secondary_images),want_manual_interaction, headless=True)
 
     search_and_download(keyword_to_search, geckodriver_path, int(number_of_images_to_download), int(result_start),
-                        image_size, int(max_secondary_images), headless=False)
+                        image_size, int(max_secondary_images),want_manual_interaction, headless=False)
 
 
 def need_to_open_folder_after_finishing(target_folder):
@@ -491,4 +535,3 @@ def need_to_open_folder_after_finishing(target_folder):
         os._exit(0)
 
 
-main_inputs()
