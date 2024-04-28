@@ -74,7 +74,7 @@ spin_main_images.pack(side=LEFT, padx=2)
 lbl_start_index = Label(master=frm_image_number_index, text="Start Index:")
 lbl_start_index.pack(side=LEFT, padx=2)
 
-start_index_var = IntVar(value=1)
+start_index_var = IntVar(value=0)
 spin_start_index = Spinbox(master=frm_image_number_index, from_=1, to=500, width=5, textvariable=start_index_var)
 spin_start_index.pack(side=LEFT, padx=2)
 
@@ -111,7 +111,7 @@ chk_interact_manually.pack(side=LEFT, padx=2)
 
 
 def interact_manually_visible_when_browser_ticked(*args):
-    if show_browser_var.get() == True:
+    if show_browser_var.get() == False:
         chk_interact_manually.configure(state=NORMAL)
     else:
         chk_interact_manually.configure(state=DISABLED)

@@ -16,6 +16,7 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from wand.image import Image as WandImage
 import subprocess
+from tkinter import messagebox
 
 
 
@@ -117,8 +118,11 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
     except Exception:
         ...
 
+    # if not headless and interact_manually:
+    #     input("PRESS ANY KEY WHEN YOU ARE READY!")
+
     if not headless and interact_manually:
-        input("PRESS ANY KEY WHEN YOU ARE READY!")
+        messagebox.showinfo("Information", "Press OK when you are done with the browser interaction")
 
     image_urls = set()
     main_image_count = 0
