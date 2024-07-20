@@ -61,8 +61,10 @@ def get_config():
         'supported_image_extensions': ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX',
                                        'PNG', 'PPM', 'SGI', 'SPIDER', 'TGA', 'TIFF', 'WEBP', 'XBM', 'SVG'],
         'need_to_check_secondary_images': False,
-        'secondary_image_button': "/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
-                                  "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a",
+        'secondary_image_button': "/html/body/c-wiz/div[1]/div[1]/div[1]/div[2]/div/div[2]/c-wiz/div/div[5]/div/div[1]/a",
+        #"/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
+                                  "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
+        #
         'image_source_page': "a.Hnk30e.indIKd",
         'image_source_page2': "a.Hnk30e.indIKd"
 

@@ -1,4 +1,7 @@
-to create the .exe file including driver:
+to install pyinslatter:
+pip install pyinstaller
+
+ create the .exe file including driver:
 pyinstaller --onefile --add-data "geckodriver.exe;." script.py
 
 pyinstaller --onefile --noconsole --add-data "geckodriver.exe;." gui.py
