@@ -55,7 +55,7 @@ def get_config():
         'cookies_accept_button_id_2': "//*[@id='yDmH0d']/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form["
                                       "2]/div/div/button",
         'thumbnail_class_xpath_selector': '//img[@class="YQ4gaf"]',
-        'full_image_class_css_selector': 'img.sFlh5c.pT0Scc.iPVvYb',
+        'full_image_class_css_selector': 'img.sFlh5c.FyHeAf.iPVvYb',
         'full_image_class_css_selector2': 'img.sFlh5c.pT0Scc',
         'firefox_path': r'C:\Program Files\Mozilla Firefox\firefox.exe',
         'supported_image_extensions': ['BMP', 'EPS', 'GIF', 'ICNS', 'ICO', 'IM', 'JPEG', 'JPEG 2000', 'MSP', 'PCX',
@@ -65,7 +65,7 @@ def get_config():
         #"/html/body/c-wiz/div[1]/div/div[1]/div[1]/div[2]/div[2]/div["
                                   "2]/c-wiz/div/div/div/div/div[5]/div/div[1]/a"
         #
-        'image_source_page': "a.Hnk30e.indIKd",
+        'image_source_page': "a.EZAeBe",
         'image_source_page2': "a.Hnk30e.indIKd"
 
     }
@@ -210,9 +210,46 @@ def fetch_image_urls(query, max_links_to_fetch, result_start_index, size_filter,
             source_page_url = ""
             try:
                 source_page = WebDriverWait(wd, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, config['image_source_page']))
+                    EC.visibility_of_element_located ((By.CSS_SELECTOR, config['image_source_page']))
                 )
                 source_page_url = source_page.get_attribute("href")
+
+
+                # these lines are for debugging purposes and finding all the css links in the page
+                # all_links = source_page = WebDriverWait(wd, 10).until(
+                #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a"))
+                # )
+                #
+                # def get_css_selector(element):
+                #     tag_name = element.tag_name
+                #     selector = tag_name
+                #
+                #     # Add ID if it exists
+                #     element_id = element.get_attribute("id")
+                #     if element_id:
+                #         selector += f"#{element_id}"
+                #
+                #     # Add classes if they exist
+                #     class_name = element.get_attribute("class")
+                #     if class_name:
+                #         class_name = ".".join(class_name.split())
+                #         selector += f".{class_name}"
+                #
+                #     # Add any other attributes you need, e.g., name, data attributes, etc.
+                #     # Example for "name" attribute:
+                #     name = element.get_attribute("name")
+                #     if name:
+                #         selector += f'[name="{name}"]'
+                #
+                #     return selector
+                #
+                # for link in all_links:
+                #     href = link.get_attribute("href")
+                #     if href:  # Check if href is not None
+                #         print(f"URL: {href}")
+                #         css_selector = get_css_selector(link)
+                #         print(f"CSS Selector: {css_selector}")
+
                 print(f"Source page URL: {source_page_url}")
             except Exception as e:
                 print(f"Error finding source page: {e}")
